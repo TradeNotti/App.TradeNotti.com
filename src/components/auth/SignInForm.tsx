@@ -52,12 +52,41 @@ export default function SignInForm() {
     setLoading(true);
     setError(null);
     try {
-      const res = await clerk.client.signIn.create({
+      // Start the sign-in with the email + password.
+      let res = await clerk.client.signIn.create({
         identifier: email.trim(),
         password,
       });
-      if (res.status === "complete") return void (await finish(res.createdSessionId));
-      setError("Additional verification is required to finish signing in.");
+
+      // Some Clerk configurations don't consume the password in create() and
+      // return "needs_first_factor" instead — finish it by explicitly attempting
+      // the password factor (this is NOT extra verification, just the second
+      // step of the same password login).
+      if (res.status === "needs_first_factor") {
+        const canPassword = res.supportedFirstFactors?.some(
+          (f) => f.strategy === "password",
+        );
+        if (canPassword) {
+          res = await clerk.client.signIn.attemptFirstFactor({
+            strategy: "password",
+            password,
+          });
+        }
+      }
+
+      if (res.status === "complete") {
+        return void (await finish(res.createdSessionId));
+      }
+
+      // Genuine additional factors (2FA / email code) — tell the user plainly
+      // instead of leaving them stuck.
+      if (res.status === "needs_second_factor") {
+        setError(
+          "Two-factor authentication is enabled on this account. Disable it in the Clerk dashboard, or contact support.",
+        );
+      } else {
+        setError("Couldn't sign you in. Check your email and password and try again.");
+      }
       setLoading(false);
     } catch (err) {
       setError(errMsg(err, "Invalid email or password."));
