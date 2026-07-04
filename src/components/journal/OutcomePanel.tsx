@@ -12,9 +12,8 @@ const GRADE_OPTIONS: SelectOption[] = [
 ];
 
 const DIRECTION_OPTIONS: SelectOption[] = [
-  { value: "Bullish", label: "Bullish" },
-  { value: "Bearish", label: "Bearish" },
-  { value: "Ranging", label: "Ranging" },
+  { value: "Main trend", label: "Main trend" },
+  { value: "Countertrend", label: "Countertrend" },
 ];
 
 // Trade grade renders as a colored pill, matching the badges used elsewhere.

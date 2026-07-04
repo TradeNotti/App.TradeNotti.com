@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UploadIcon, PlusIcon } from "../icons";
 
 type Kind = "BEFORE" | "AFTER";
@@ -67,6 +67,7 @@ function Slot({
       </div>
 
       <button
+        data-screenshot-slot
         onClick={() => inputRef.current?.click()}
         onPaste={(e) => {
           const file = Array.from(e.clipboardData.items)
@@ -147,6 +148,35 @@ export default function ScreenshotPanel({
     }
   };
 
+  // Paste an image anywhere on the page (outside the notes editor / inputs) and
+  // it drops into the first empty screenshot slot — no need to click first.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.closest?.(
+          '.tiptap-content, input, textarea, [contenteditable="true"], [data-screenshot-slot]',
+        )
+      ) {
+        return; // handled by the editor or the focused slot itself
+      }
+      const file = Array.from(e.clipboardData?.items ?? [])
+        .find((it) => it.type.startsWith("image/"))
+        ?.getAsFile();
+      if (!file) return;
+      e.preventDefault();
+      const kind: Kind = !screenshots.before
+        ? "BEFORE"
+        : !screenshots.after
+          ? "AFTER"
+          : "BEFORE";
+      upload(kind, file);
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenshots]);
+
   const remove = async (kind: Kind) => {
     onChange({ ...screenshots, [kind.toLowerCase()]: null });
     await fetch(`/api/trades/${tradeId}/screenshot?kind=${kind}`, {
@@ -187,8 +217,8 @@ export default function ScreenshotPanel({
       </div>
 
       <p className="mt-4 flex items-center gap-1.5 text-[12px] text-faint">
-        <UploadIcon size={13} /> Click a slot then paste (Ctrl/⌘+V), or click to
-        upload. Images are resized and stored with the trade.
+        <UploadIcon size={13} /> Just paste an image (Ctrl/⌘+V) — it fills the
+        next empty slot — or click a slot to upload.
       </p>
     </section>
   );
