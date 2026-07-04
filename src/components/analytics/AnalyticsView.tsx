@@ -37,30 +37,21 @@ function Delta({ up, children }: { up: boolean; children: React.ReactNode }) {
   );
 }
 
-const signedText = (n: number | null) =>
-  n == null ? "text-ink" : n > 0 ? "text-profit" : n < 0 ? "text-loss" : "text-ink";
-
 function StatCard({
   label,
   value,
   delta,
   note,
-  valueClass,
 }: {
   label: string;
   value: string;
   delta?: React.ReactNode;
   note?: string;
-  valueClass?: string;
 }) {
   return (
-    <section className="card-soft p-5">
+    <section className="rounded-2xl border border-line bg-surface p-5">
       <div className="kicker mb-2">{label}</div>
-      <div
-        className={`text-[34px] font-bold leading-none tracking-tight ${valueClass ?? ""}`}
-      >
-        {value}
-      </div>
+      <div className="text-[30px] font-bold leading-none tracking-tight">{value}</div>
       <div className="mt-3 flex flex-col gap-0.5 text-[12px]">
         {delta && <span>{delta}</span>}
         {note && <span className="text-faint">{note}</span>}
@@ -159,12 +150,16 @@ export default function AnalyticsView({
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Analytics</h1>
           </div>
           <div className={`flex items-center gap-2 ${loading ? "opacity-60" : ""}`}>
-            <div className="segmented">
+            <div className="inline-flex rounded-lg bg-black/[0.04] p-0.5">
               {RANGES.map((r) => (
                 <button
                   key={r.id}
-                  data-active={range === r.id}
                   onClick={() => changeRange(r.id)}
+                  className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                    range === r.id
+                      ? "bg-surface text-ink shadow-sm"
+                      : "text-muted hover:text-ink"
+                  }`}
                 >
                   {r.label}
                 </button>
@@ -207,7 +202,6 @@ export default function AnalyticsView({
           <StatCard
             label="Net P&L"
             value={compactMoney(data.netPnl)}
-            valueClass={signedText(data.netPnl)}
             delta={
               data.netPnlDeltaPct != null && (
                 <Delta up={data.netPnlDeltaPct >= 0}>
@@ -241,14 +235,14 @@ export default function AnalyticsView({
               )
             }
           />
-          <section className="card-soft p-5">
+          <section className="rounded-2xl border border-line bg-surface p-5">
             <div className="kicker mb-2">Avg win / loss</div>
             <div className="flex items-baseline gap-2">
-              <span className="num text-[26px] font-bold leading-none text-profit">
+              <span className="num text-[22px] font-bold leading-none text-profit">
                 {data.avgWin == null ? "—" : compactMoney(data.avgWin)}
               </span>
               <span className="text-faint">/</span>
-              <span className="num text-[26px] font-bold leading-none text-loss">
+              <span className="num text-[22px] font-bold leading-none text-loss">
                 {data.avgLoss == null ? "—" : compactMoney(data.avgLoss)}
               </span>
             </div>
@@ -258,7 +252,7 @@ export default function AnalyticsView({
 
         {/* Equity + distribution */}
         <div className="mb-5 grid gap-5 lg:grid-cols-3">
-          <section className="rounded-3xl border border-line bg-surface p-5 sm:p-6 lg:col-span-2">
+          <section className="rounded-2xl border border-line bg-surface p-5 sm:p-6 lg:col-span-2">
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <div className="kicker mb-1">Equity curve · {data.periodLabel}</div>
@@ -268,7 +262,7 @@ export default function AnalyticsView({
             <EquityCurve points={data.equityCurve} />
           </section>
 
-          <section className="rounded-3xl border border-line bg-surface p-5 sm:p-6">
+          <section className="rounded-2xl border border-line bg-surface p-5 sm:p-6">
             <div className="kicker mb-1">Distribution</div>
             <h2 className="mb-4 text-[15px] font-semibold">Win / loss</h2>
             <div className="flex items-center gap-5">
@@ -294,7 +288,7 @@ export default function AnalyticsView({
         </div>
 
         {/* Best & worst setups */}
-        <section className="mb-5 rounded-3xl border border-line bg-surface p-5 sm:p-6">
+        <section className="mb-5 rounded-2xl border border-line bg-surface p-5 sm:p-6">
           <div className="kicker mb-1">Edge</div>
           <h2 className="mb-4 text-[15px] font-semibold">Best &amp; worst setups</h2>
           {data.setups.length === 0 ? (
