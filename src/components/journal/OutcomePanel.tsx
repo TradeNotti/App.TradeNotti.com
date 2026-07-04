@@ -162,7 +162,7 @@ export default function OutcomePanel({
         <Row label="Phase of market">
           <EditableText
             value={detail.phaseOfMarket}
-            placeholder="e.g. Markup"
+            placeholder="e.g. Correction"
             onSave={(phaseOfMarket) => patch({ phaseOfMarket })}
           />
         </Row>

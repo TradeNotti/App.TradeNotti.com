@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import { MobileNavProvider } from "@/components/MobileNav";
+import RefreshOnReturn from "@/components/RefreshOnReturn";
 import { requireUser } from "@/lib/auth";
 
 export default async function AppLayout({
@@ -10,6 +11,7 @@ export default async function AppLayout({
   await requireUser();
   return (
     <MobileNavProvider>
+      <RefreshOnReturn />
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
         <div className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">

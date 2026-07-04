@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { JournalDetail } from "@/lib/journal";
 import {
   formatMoney,
@@ -23,6 +24,24 @@ import TagsPanel from "./TagsPanel";
 export default function TradeDetail({ trade }: { trade: JournalDetail }) {
   // Local copy so edits reflect immediately without a full reload.
   const [detail, setDetail] = useState<JournalDetail>(trade);
+  const router = useRouter();
+  const firstRender = useRef(true);
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // When this trade is edited (grade, tags, notes, screenshots, …), invalidate
+  // the client router cache (debounced) so the Journal list and Today reflect
+  // the change the moment the user navigates back — no manual refresh needed.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => router.refresh(), 800);
+    return () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    };
+  }, [detail, router]);
 
   return (
     <div className="flex-1 overflow-y-auto">
