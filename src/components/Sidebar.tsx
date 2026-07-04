@@ -77,7 +77,14 @@ export default function Sidebar() {
   const [peek, setPeek] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Hover-peek is a mouse affordance only — never fire it on touch devices
+  // (phones/tablets), where a tap would otherwise flash the sidebar in.
+  const canHover = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(hover: hover)").matches;
+
   const showPeek = () => {
+    if (!canHover()) return;
     if (hideTimer.current) {
       clearTimeout(hideTimer.current);
       hideTimer.current = null;
@@ -98,6 +105,33 @@ export default function Sidebar() {
     setOpen(false);
     setPeek(false);
   };
+
+  // Close the mobile drawer on ANY navigation (back/forward or programmatic),
+  // not just link clicks.
+  useEffect(() => {
+    setOpen(false);
+    setPeek(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Growing to a desktop width should never leave a mobile drawer "open"; lock
+  // background scroll while the drawer is open.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   // Desktop position: pinned (collapsed=false) sits in the layout; collapsed
   // floats off-screen and only slides in (as an overlay) while peeking.
