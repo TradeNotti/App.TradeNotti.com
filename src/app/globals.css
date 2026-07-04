@@ -44,15 +44,50 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Signature soft indigo aurora glow — subtle on white, gives the app a premium
-   lift without darkening the background. */
+/* Signature soft pastel aurora — a dreamy pink → indigo → blue wash on white,
+   for a premium, friendly feel without darkening the background. */
 body {
   background-color: var(--color-canvas);
   background-image:
-    radial-gradient(52rem 32rem at 12% -6%, rgba(91, 78, 245, 0.07), transparent 60%),
-    radial-gradient(46rem 28rem at 106% 2%, rgba(157, 123, 255, 0.06), transparent 55%);
+    radial-gradient(46rem 30rem at 6% -6%, rgba(236, 72, 153, 0.06), transparent 60%),
+    radial-gradient(54rem 34rem at 102% -4%, rgba(91, 78, 245, 0.07), transparent 58%),
+    radial-gradient(48rem 42rem at 60% 112%, rgba(56, 189, 248, 0.05), transparent 62%);
   background-attachment: fixed;
   min-height: 100vh;
+}
+
+/* Soft pastel stat/feature card — rounded, gently tinted, airy. */
+.card-soft {
+  border-radius: 1.5rem;
+  border: 1px solid var(--color-line);
+  background-image: linear-gradient(
+    160deg,
+    rgba(234, 231, 254, 0.55),
+    var(--color-surface) 62%
+  );
+  box-shadow: 0 1px 2px rgba(14, 15, 19, 0.02);
+}
+
+/* Notion/forextester-style segmented pill control. */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9999px;
+  background: rgba(14, 15, 19, 0.045);
+}
+.segmented > button {
+  border-radius: 9999px;
+  padding: 0.375rem 0.85rem;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted);
+  transition: all 0.15s ease;
+}
+.segmented > button[data-active="true"] {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 1px 3px rgba(14, 15, 19, 0.1);
 }
 
 /* Feature headings use the Bricolage Grotesque display font. */
