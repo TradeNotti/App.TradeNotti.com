@@ -11,6 +11,7 @@ import {
   formatLots,
   formatDuration,
   formatTradeTime,
+  formatAbsolute,
 } from "@/lib/format";
 import { DirBadge, GradePill } from "./cells";
 import { ArrowLeftIcon } from "../icons";
@@ -69,8 +70,8 @@ export default function TradeDetail({ trade }: { trade: JournalDetail }) {
                 positionSize: formatLots(detail.volume),
                 stopLoss: formatPips(detail.entry, detail.stopLoss, detail.symbol),
                 duration: formatDuration(detail.openedAt, detail.closedAt),
-                entryAt: formatTradeTime(detail.openedAt),
-                exitAt: detail.closedAt ? formatTradeTime(detail.closedAt) : "Open",
+                entryAt: formatAbsolute(detail.openedAt),
+                exitAt: detail.closedAt ? formatAbsolute(detail.closedAt) : "Open",
               }}
               onChange={(patch) => setDetail((d) => ({ ...d, ...patch }))}
             />

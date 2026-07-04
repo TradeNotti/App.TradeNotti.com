@@ -47,6 +47,22 @@ export function formatTradeTime(iso: string): string {
   return `${diffDays}d ago · ${time}`;
 }
 
+// Absolute timestamp, e.g. "Jun 27, 2026 · 14:30" (no relative "Nd ago").
+export function formatAbsolute(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const time = d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return `${date} · ${time}`;
+}
+
 // Capitalize the first letter of each word (e.g. "edwin sungura" -> "Edwin Sungura").
 export function titleCase(s: string): string {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());

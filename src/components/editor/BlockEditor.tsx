@@ -37,6 +37,8 @@ import {
 export interface BlockEditorHandle {
   getJSON: () => object;
   setContent: (content: object | string) => void;
+  // Append a paragraph of text at the end (used by voice transcription).
+  insertText: (text: string) => void;
 }
 
 // Downscale + compress an image File to a JPEG data URL so it can be embedded
@@ -161,8 +163,12 @@ const BlockEditor = forwardRef<
     initialContent: object | string | null;
     onUpdate?: () => void;
     placeholder?: string;
+    contentClassName?: string;
   }
->(function BlockEditor({ initialContent, onUpdate, placeholder }, ref) {
+>(function BlockEditor(
+  { initialContent, onUpdate, placeholder, contentClassName },
+  ref,
+) {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const [slash, setSlash] = useState<SlashState | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
@@ -220,7 +226,7 @@ const BlockEditor = forwardRef<
     ],
     content: initialContent ?? "",
     editorProps: {
-      attributes: { class: "tiptap-content" },
+      attributes: { class: `tiptap-content ${contentClassName ?? ""}`.trim() },
       handleKeyDown: (view, event) => {
         if (event.key !== " ") return false;
         const sel = view.state.selection;
@@ -278,6 +284,12 @@ const BlockEditor = forwardRef<
     () => ({
       getJSON: () => editor?.getJSON() ?? {},
       setContent: (content) => editor?.commands.setContent(content ?? ""),
+      insertText: (text) =>
+        editor
+          ?.chain()
+          .focus("end")
+          .insertContent({ type: "paragraph", content: [{ type: "text", text }] })
+          .run(),
     }),
     [editor],
   );

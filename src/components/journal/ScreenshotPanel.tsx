@@ -68,7 +68,17 @@ function Slot({
 
       <button
         onClick={() => inputRef.current?.click()}
-        className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-black/[0.015] transition-colors hover:border-accent/50"
+        onPaste={(e) => {
+          const file = Array.from(e.clipboardData.items)
+            .find((it) => it.type.startsWith("image/"))
+            ?.getAsFile();
+          if (file) {
+            e.preventDefault();
+            onPick(file);
+          }
+        }}
+        title="Click to upload, or paste an image (Ctrl/⌘+V)"
+        className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-black/[0.015] transition-colors hover:border-accent/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
       >
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -76,7 +86,9 @@ function Slot({
         ) : (
           <span className="flex flex-col items-center gap-1.5 text-faint group-hover:text-accent">
             <PlusIcon size={20} />
-            <span className="text-[12px]">{busy ? "Uploading…" : "Add screenshot"}</span>
+            <span className="text-[12px]">
+              {busy ? "Uploading…" : "Add or paste screenshot"}
+            </span>
           </span>
         )}
         {busy && (
@@ -175,7 +187,8 @@ export default function ScreenshotPanel({
       </div>
 
       <p className="mt-4 flex items-center gap-1.5 text-[12px] text-faint">
-        <UploadIcon size={13} /> Images are resized and stored with the trade.
+        <UploadIcon size={13} /> Click a slot then paste (Ctrl/⌘+V), or click to
+        upload. Images are resized and stored with the trade.
       </p>
     </section>
   );
