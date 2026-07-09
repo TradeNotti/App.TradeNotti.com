@@ -1,6 +1,6 @@
 import TopBar from "@/components/TopBar";
 import EmptyAccount from "@/components/EmptyAccount";
-import JournalView from "@/components/journal/JournalView";
+import JournalTabs from "@/components/journal/JournalTabs";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
@@ -14,9 +14,9 @@ export const dynamic = "force-dynamic";
 export default async function JournalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ account?: string }>;
+  searchParams: Promise<{ account?: string; view?: string }>;
 }) {
-  const { account: accountParam } = await searchParams;
+  const { account: accountParam, view } = await searchParams;
 
   const [user, accounts, account, accountIds] = await Promise.all([
     getCurrentUser(),
@@ -29,9 +29,11 @@ export default async function JournalPage({
     return <EmptyAccount />;
   }
 
-  const [trades, options] = await Promise.all([
+  const [live, liveOptions, backtest, backtestOptions] = await Promise.all([
     getJournalTrades(accountIds),
     getJournalFilterOptions(accountIds),
+    getJournalTrades(accountIds, true),
+    getJournalFilterOptions(accountIds, true),
   ]);
 
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
@@ -49,7 +51,13 @@ export default async function JournalPage({
         activeId={account.id}
         userInitial={initial}
       />
-      <JournalView trades={trades} options={options} />
+      <JournalTabs
+        live={live}
+        liveOptions={liveOptions}
+        backtest={backtest}
+        backtestOptions={backtestOptions}
+        initialView={view === "backtest" ? "backtest" : "live"}
+      />
     </>
   );
 }

@@ -5,7 +5,6 @@ import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server
 const isProtected = createRouteMatcher([
   "/today(.*)",
   "/journal(.*)",
-  "/backtest(.*)",
   "/analytics(.*)",
   "/notebook(.*)",
   "/rules(.*)",

@@ -70,6 +70,7 @@ export default function JournalView({
   title = "Journal",
   basePath = "/journal",
   headerRight,
+  belowHeader,
   emptyLabel = "No trades match these filters.",
 }: {
   trades: JournalRow[];
@@ -77,6 +78,7 @@ export default function JournalView({
   title?: string;
   basePath?: string;
   headerRight?: React.ReactNode;
+  belowHeader?: React.ReactNode;
   emptyLabel?: string;
 }) {
   const router = useRouter();
@@ -106,6 +108,8 @@ export default function JournalView({
             {headerRight}
           </div>
         </div>
+
+        {belowHeader}
 
         {/* Tabs */}
         <div className="mb-4 flex items-center gap-2 border-b border-line pb-px">

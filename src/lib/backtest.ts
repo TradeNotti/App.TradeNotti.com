@@ -27,8 +27,15 @@ function computeR(
   return Math.round((reward / risk) * 100) / 100;
 }
 
-/** Create a manually-logged backtest trade (always CLOSED, isBacktest). */
-export async function createBacktestTrade(accountId: string, data: BacktestInput) {
+/**
+ * Create a manually-logged trade (always CLOSED). Used for both the journal
+ * (isBacktest = false) and the backtesting tab (isBacktest = true).
+ */
+export async function createManualTrade(
+  accountId: string,
+  data: BacktestInput,
+  isBacktest: boolean,
+) {
   const openedAt = new Date(data.date);
   const when = isNaN(openedAt.getTime()) ? new Date() : openedAt;
   const rMultiple = computeR(
@@ -41,7 +48,7 @@ export async function createBacktestTrade(accountId: string, data: BacktestInput
   return prisma.trade.create({
     data: {
       accountId,
-      isBacktest: true,
+      isBacktest,
       symbol: data.symbol.trim(),
       direction: data.direction,
       status: "CLOSED",

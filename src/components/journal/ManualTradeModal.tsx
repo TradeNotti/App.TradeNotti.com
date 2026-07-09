@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import type { JournalRow } from "@/lib/journal";
-import JournalView from "../journal/JournalView";
-import { PlusIcon, CloseIcon } from "../icons";
+import { CloseIcon } from "../icons";
 
 type Dir = "LONG" | "SHORT";
 
@@ -18,50 +15,12 @@ function todayStr() {
   ).padStart(2, "0")}`;
 }
 
-export default function BacktestView({
-  trades,
-  options,
-}: {
-  trades: JournalRow[];
-  options: { symbols: string[]; tags: string[] };
-}) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <JournalView
-        trades={trades}
-        options={options}
-        title="Backtesting"
-        basePath="/backtest"
-        emptyLabel="No backtest trades yet — log your first one."
-        headerRight={
-          <button
-            onClick={() => setOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-accent/90"
-          >
-            <PlusIcon size={15} /> New backtest
-          </button>
-        }
-      />
-      {open && (
-        <NewBacktestModal
-          onClose={() => setOpen(false)}
-          onSaved={(id) => {
-            setOpen(false);
-            router.push(`/backtest/${id}`);
-          }}
-        />
-      )}
-    </>
-  );
-}
-
-function NewBacktestModal({
+export default function ManualTradeModal({
+  isBacktest,
   onClose,
   onSaved,
 }: {
+  isBacktest: boolean;
   onClose: () => void;
   onSaved: (id: string) => void;
 }) {
@@ -86,10 +45,11 @@ function NewBacktestModal({
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/backtest", {
+      const res = await fetch("/api/trades/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          isBacktest,
           symbol: symbol.trim(),
           direction,
           entry: Number(entry),
@@ -119,7 +79,9 @@ function NewBacktestModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-[15px] font-bold tracking-tight">New backtest trade</h3>
+          <h3 className="text-[15px] font-bold tracking-tight">
+            {isBacktest ? "New backtest trade" : "Log a trade"}
+          </h3>
           <button onClick={onClose} className="text-faint hover:text-ink">
             <CloseIcon size={18} />
           </button>
