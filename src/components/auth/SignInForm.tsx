@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useClerk } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -18,6 +18,33 @@ function errMsg(err: unknown, fallback: string): string {
   return e?.errors?.[0]?.longMessage ?? e?.errors?.[0]?.message ?? fallback;
 }
 
+// True if Clerk rejected the sign-in because a session already exists (already
+// signed in on this browser). In that case we should just enter the app.
+function isAlreadySignedIn(err: unknown): boolean {
+  const e = err as { errors?: { code?: string; message?: string }[] };
+  const first = e?.errors?.[0];
+  return (
+    first?.code === "session_exists" ||
+    first?.code === "identifier_already_signed_in" ||
+    /already signed in/i.test(first?.message ?? "")
+  );
+}
+
+// Ask the browser to save the credential so it can be autofilled next time
+// (Credential Management API — a no-op where unsupported).
+async function saveCredential(id: string, password: string) {
+  try {
+    const w = window as unknown as {
+      PasswordCredential?: new (d: { id: string; password: string }) => Credential;
+    };
+    if (w.PasswordCredential && navigator.credentials?.store) {
+      await navigator.credentials.store(new w.PasswordCredential({ id, password }));
+    }
+  } catch {
+    /* saving is best-effort */
+  }
+}
+
 /**
  * Single-step email + password sign-in with an inline forgot-password reset
  * flow (send code -> enter code + new password), all on one branded card.
@@ -25,6 +52,7 @@ function errMsg(err: unknown, fallback: string): string {
  */
 export default function SignInForm() {
   const clerk = useClerk();
+  const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signIn");
   const [email, setEmail] = useState("");
@@ -34,6 +62,13 @@ export default function SignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Already signed in on this browser → go straight into the app instead of
+  // showing the sign-in form (which would otherwise error / push the user to
+  // reset their password).
+  useEffect(() => {
+    if (isLoaded && isSignedIn) router.replace("/today");
+  }, [isLoaded, isSignedIn, router]);
 
   function go(next: Mode) {
     setMode(next);
@@ -75,6 +110,7 @@ export default function SignInForm() {
       }
 
       if (res.status === "complete") {
+        await saveCredential(email.trim(), password);
         return void (await finish(res.createdSessionId));
       }
 
@@ -89,6 +125,11 @@ export default function SignInForm() {
       }
       setLoading(false);
     } catch (err) {
+      // If we're already signed in on this browser, just enter the app.
+      if (isAlreadySignedIn(err)) {
+        router.replace("/today");
+        return;
+      }
       setError(errMsg(err, "Invalid email or password."));
       setLoading(false);
     }
@@ -127,7 +168,10 @@ export default function SignInForm() {
       if (res.status === "needs_new_password") {
         res = await clerk.client.signIn.resetPassword({ password: newPassword });
       }
-      if (res.status === "complete") return void (await finish(res.createdSessionId));
+      if (res.status === "complete") {
+        await saveCredential(email.trim(), newPassword);
+        return void (await finish(res.createdSessionId));
+      }
       setError("Couldn't reset your password. Please try again.");
       setLoading(false);
     } catch (err) {
@@ -155,7 +199,8 @@ export default function SignInForm() {
           <Field label="Email">
             <input
               type="email"
-              autoComplete="email"
+              name="email"
+              autoComplete="username"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -177,6 +222,7 @@ export default function SignInForm() {
           >
             <input
               type="password"
+              name="password"
               autoComplete="current-password"
               required
               value={password}
