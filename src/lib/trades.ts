@@ -52,7 +52,7 @@ export async function getOpenTrades(
   account: AccountScope,
 ): Promise<TradeView[]> {
   const trades = await prisma.trade.findMany({
-    where: { accountId: accountWhere(account), status: "OPEN" },
+    where: { accountId: accountWhere(account), status: "OPEN", isBacktest: false },
     include: { tags: { include: { tag: true } } },
     orderBy: { openedAt: "desc" },
   });

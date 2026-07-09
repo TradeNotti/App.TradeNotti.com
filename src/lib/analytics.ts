@@ -213,7 +213,7 @@ export async function getAnalytics(
   const currency = accounts[0]?.currency ?? "USD";
 
   const trades = await prisma.trade.findMany({
-    where: { accountId: accountWhere(account) },
+    where: { accountId: accountWhere(account), isBacktest: false },
     include: { tags: { include: { tag: true } } },
   });
   const closed = trades.filter((t) => t.status === "CLOSED");
@@ -395,6 +395,7 @@ export async function getDayTrades(
   const rows = await prisma.trade.findMany({
     where: {
       accountId: accountWhere(account),
+      isBacktest: false,
       status: "CLOSED",
       closedAt: { gte: start, lt: end },
     },
@@ -421,6 +422,7 @@ export async function getSetupTrades(
   const rows = await prisma.trade.findMany({
     where: {
       accountId: accountWhere(account),
+      isBacktest: false,
       status: "CLOSED",
       closedAt,
       tags: { some: { tag: { name: tag } } },
@@ -452,6 +454,7 @@ export async function getCalendar(
   const trades = await prisma.trade.findMany({
     where: {
       accountId: accountWhere(account),
+      isBacktest: false,
       status: "CLOSED",
       closedAt: { gte: monthStart, lt: monthEnd },
     },

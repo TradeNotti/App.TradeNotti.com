@@ -67,9 +67,17 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
 export default function JournalView({
   trades,
   options,
+  title = "Journal",
+  basePath = "/journal",
+  headerRight,
+  emptyLabel = "No trades match these filters.",
 }: {
   trades: JournalRow[];
   options: { symbols: string[]; tags: string[] };
+  title?: string;
+  basePath?: string;
+  headerRight?: React.ReactNode;
+  emptyLabel?: string;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("ALL");
@@ -91,9 +99,12 @@ export default function JournalView({
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Journal</h1>
-          <FilterMenu filters={filters} setFilters={setFilters} options={options} />
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
+          <div className="flex items-center gap-2">
+            <FilterMenu filters={filters} setFilters={setFilters} options={options} />
+            {headerRight}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -192,9 +203,7 @@ export default function JournalView({
 
         <section className="rounded-2xl border border-line bg-surface p-6">
           {rows.length === 0 ? (
-            <p className="py-10 text-center text-sm text-faint">
-              No trades match these filters.
-            </p>
+            <p className="py-10 text-center text-sm text-faint">{emptyLabel}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[860px] text-left">
@@ -216,7 +225,7 @@ export default function JournalView({
                   {rows.map((t) => (
                     <tr
                       key={t.id}
-                      onClick={() => router.push(`/journal/${t.id}`)}
+                      onClick={() => router.push(`${basePath}/${t.id}`)}
                       className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-black/[0.02] [&>td]:px-3 [&>td]:py-3.5"
                     >
                       <td className="!pl-0">

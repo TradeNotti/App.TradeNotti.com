@@ -40,9 +40,10 @@ const num = (v: unknown) => (v == null ? null : Number(v));
 /** All trades for an account (open + closed), newest first — the Journal list. */
 export async function getJournalTrades(
   account: AccountScope,
+  backtest = false,
 ): Promise<JournalRow[]> {
   const trades = await prisma.trade.findMany({
-    where: { accountId: accountWhere(account) },
+    where: { accountId: accountWhere(account), isBacktest: backtest },
     include: { tags: { include: { tag: true } } },
     orderBy: { openedAt: "desc" },
   });
@@ -110,12 +111,15 @@ export async function getTradeDetail(
 }
 
 /** Distinct symbols and tags for the filter menu options. */
-export async function getJournalFilterOptions(account: AccountScope): Promise<{
+export async function getJournalFilterOptions(
+  account: AccountScope,
+  backtest = false,
+): Promise<{
   symbols: string[];
   tags: string[];
 }> {
   const trades = await prisma.trade.findMany({
-    where: { accountId: accountWhere(account) },
+    where: { accountId: accountWhere(account), isBacktest: backtest },
     select: { symbol: true, tags: { include: { tag: true } } },
   });
   const symbols = [...new Set(trades.map((t) => t.symbol))].sort();

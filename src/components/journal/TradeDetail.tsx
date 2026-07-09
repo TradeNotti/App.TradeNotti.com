@@ -21,7 +21,15 @@ import NotesPanel from "./NotesPanel";
 import OutcomePanel from "./OutcomePanel";
 import TagsPanel from "./TagsPanel";
 
-export default function TradeDetail({ trade }: { trade: JournalDetail }) {
+export default function TradeDetail({
+  trade,
+  backHref = "/journal",
+  backLabel = "Journal",
+}: {
+  trade: JournalDetail;
+  backHref?: string;
+  backLabel?: string;
+}) {
   // Local copy so edits reflect immediately without a full reload.
   const [detail, setDetail] = useState<JournalDetail>(trade);
   const router = useRouter();
@@ -47,10 +55,10 @@ export default function TradeDetail({ trade }: { trade: JournalDetail }) {
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <Link
-          href="/journal"
+          href={backHref}
           className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink"
         >
-          <ArrowLeftIcon size={15} /> Journal · {formatTradeTime(detail.openedAt)}
+          <ArrowLeftIcon size={15} /> {backLabel} · {formatTradeTime(detail.openedAt)}
         </Link>
 
         <div className="mb-7 flex flex-wrap items-center gap-x-4 gap-y-2">

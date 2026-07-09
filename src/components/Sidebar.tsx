@@ -17,11 +17,13 @@ import {
   SettingsIcon,
   CloseIcon,
   SidebarIcon,
+  ClockIcon,
 } from "./icons";
 
 const NAV = [
   { href: "/today", label: "Today", Icon: SunIcon },
   { href: "/journal", label: "Journal", Icon: JournalIcon },
+  { href: "/backtest", label: "Backtesting", Icon: ClockIcon },
   { href: "/analytics", label: "Analytics", Icon: AnalyticsIcon },
   { href: "/notebook", label: "Notebook", Icon: NotebookIcon },
   { href: "/rules", label: "Rules", Icon: RulesIcon },

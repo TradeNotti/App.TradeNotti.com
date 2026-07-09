@@ -247,6 +247,9 @@ model Trade {
   direction TradeDirection
   status    TradeStatus    @default(OPEN)
   grade     TradeGrade?
+  // Manually-logged backtest trades (kept separate from live/synced trades so
+  // they don't skew live analytics). Live/synced trades are false.
+  isBacktest Boolean       @default(false)
 
   entry      Decimal  @db.Decimal(18, 5)
   stopLoss   Decimal? @db.Decimal(18, 5)
@@ -276,6 +279,7 @@ model Trade {
   @@unique([accountId, externalId])
   @@index([accountId, status])
   @@index([accountId, openedAt])
+  @@index([accountId, isBacktest])
 }
 
 enum ScreenshotKind {

@@ -125,7 +125,7 @@ export async function getPerformance(
   period: Period,
 ): Promise<PerformanceData> {
   const trades = await prisma.trade.findMany({
-    where: { accountId: accountWhere(account), status: "CLOSED" },
+    where: { accountId: accountWhere(account), status: "CLOSED", isBacktest: false },
     orderBy: { closedAt: "asc" },
     select: { pnl: true, rMultiple: true, closedAt: true },
   });
