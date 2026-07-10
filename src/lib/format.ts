@@ -63,6 +63,37 @@ export function formatAbsolute(iso: string): string {
   return `${date} · ${time}`;
 }
 
+// Notes are stored as a stringified TipTap/ProseMirror doc (legacy notes are
+// plain text). For compact previews we need readable text, never the raw JSON
+// blob. Walks the doc collecting text nodes; returns "" for an empty doc.
+function walkDocText(node: unknown): string {
+  if (!node || typeof node !== "object") return "";
+  const n = node as { type?: string; text?: string; content?: unknown[] };
+  if (typeof n.text === "string") return n.text;
+  let out = "";
+  if (Array.isArray(n.content)) out = n.content.map(walkDocText).join(" ");
+  if (
+    n.type &&
+    ["paragraph", "heading", "listItem", "blockquote", "codeBlock"].includes(n.type)
+  ) {
+    out += "\n";
+  }
+  return out;
+}
+
+export function notesToText(notes: string | null): string {
+  if (!notes) return "";
+  const trimmed = notes.trim();
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      return walkDocText(JSON.parse(trimmed)).replace(/\n{2,}/g, "\n").trim();
+    } catch {
+      // Not valid JSON — fall through and treat as plain text.
+    }
+  }
+  return trimmed;
+}
+
 // Capitalize the first letter of each word (e.g. "edwin sungura" -> "Edwin Sungura").
 export function titleCase(s: string): string {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());

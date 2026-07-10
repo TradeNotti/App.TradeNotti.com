@@ -9,6 +9,7 @@ import {
   formatR,
   formatLots,
   formatDuration,
+  notesToText,
 } from "@/lib/format";
 import { DirBadge, GradePill, TagChip, signedClass } from "../journal/cells";
 import { CloseIcon, ArrowRightIcon } from "../icons";
@@ -41,8 +42,9 @@ function JournalField({
 }
 
 function TradeBlock({ t }: { t: DayTrade }) {
+  const notesText = notesToText(t.notes);
   const hasJournal =
-    t.notes ||
+    notesText ||
     t.marketDirection ||
     t.phaseOfMarket ||
     t.stopLossNote ||
@@ -89,9 +91,9 @@ function TradeBlock({ t }: { t: DayTrade }) {
             </div>
           )}
 
-          {t.notes && (
+          {notesText && (
             <p className="whitespace-pre-wrap rounded-lg bg-black/[0.02] px-3 py-2 text-[13px] leading-relaxed text-ink-soft">
-              {t.notes}
+              {notesText}
             </p>
           )}
 
