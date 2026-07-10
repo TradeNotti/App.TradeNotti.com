@@ -97,6 +97,16 @@ export default function OutcomePanel({
 }) {
   const [saving, setSaving] = useState(false);
 
+  // A trade counts as "journaled" for the qualitative setup fields once any of
+  // grade / market direction / phase is set. Until then we keep those empty
+  // rows collapsed behind one quiet button so an un-journaled trade isn't a
+  // wall of blank "—" lines — journaling stays one click away.
+  const hasSetup = Boolean(
+    detail.grade || detail.marketDirection || detail.phaseOfMarket,
+  );
+  const [showSetup, setShowSetup] = useState(false);
+  const setupVisible = hasSetup || showSetup;
+
   const patch = async (body: Partial<JournalDetail>) => {
     onChange(body);
     setSaving(true);
@@ -142,37 +152,46 @@ export default function OutcomePanel({
           <span className={signedClass(detail.roi)}>{metrics.roi}</span>
         </Row>
 
-        <Row label="Trade grade">
-          <InlineSelect
-            value={detail.grade ?? null}
-            options={GRADE_OPTIONS}
-            onChange={(v) => patch({ grade: (v || null) as TradeGrade | null })}
-            renderTrigger={gradeTrigger}
-          />
-        </Row>
+        {setupVisible && (
+          <>
+            <Row label="Trade grade">
+              <InlineSelect
+                value={detail.grade ?? null}
+                options={GRADE_OPTIONS}
+                onChange={(v) => patch({ grade: (v || null) as TradeGrade | null })}
+                renderTrigger={gradeTrigger}
+              />
+            </Row>
 
-        <Row label="Market direction">
-          <InlineSelect
-            value={detail.marketDirection ?? null}
-            options={DIRECTION_OPTIONS}
-            onChange={(v) => patch({ marketDirection: v || null })}
-          />
-        </Row>
+            <Row label="Market direction">
+              <InlineSelect
+                value={detail.marketDirection ?? null}
+                options={DIRECTION_OPTIONS}
+                onChange={(v) => patch({ marketDirection: v || null })}
+              />
+            </Row>
 
-        <Row label="Phase of market">
-          <EditableText
-            value={detail.phaseOfMarket}
-            placeholder="e.g. Correction"
-            onSave={(phaseOfMarket) => patch({ phaseOfMarket })}
-          />
-        </Row>
+            <Row label="Phase of market">
+              <EditableText
+                value={detail.phaseOfMarket}
+                placeholder="e.g. Correction"
+                onSave={(phaseOfMarket) => patch({ phaseOfMarket })}
+              />
+            </Row>
+          </>
+        )}
       </div>
 
-      <p className="mt-3 text-[11px] text-faint">
-        {saving
-          ? "Saving…"
-          : "Fill in any blank fields (—) to complete this trade's journal."}
-      </p>
+      {!setupVisible && (
+        <button
+          onClick={() => setShowSetup(true)}
+          className="mt-2 text-[12.5px] font-medium text-accent hover:underline"
+        >
+          + Add grade, market direction &amp; phase
+        </button>
+      )}
+
+      {saving && <p className="mt-3 text-[11px] text-faint">Saving…</p>}
     </section>
   );
 }
