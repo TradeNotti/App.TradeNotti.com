@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { ManagedAccount } from "@/lib/settings";
 import type { AccountType } from "@prisma/client";
 import { CloseIcon } from "../icons";
+import { cleanErrorMessage } from "@/lib/errors";
 
 const input =
   "w-full rounded-lg border border-line px-3 py-2.5 text-[14px] outline-none focus:border-accent/40";
@@ -56,7 +57,7 @@ export default function AccountModal({
       if (!res.ok) throw new Error(j.error || "Could not save account.");
       onSaved(j.account);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save account.");
+      setError(cleanErrorMessage(e, "Could not save account."));
     } finally {
       setSaving(false);
     }

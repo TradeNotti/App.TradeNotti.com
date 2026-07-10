@@ -7,6 +7,7 @@ import AccountModal from "./AccountModal";
 import ConnectBrokerModal from "./ConnectBrokerModal";
 import { PlusIcon, ChevronIcon, TrashIcon, ImageIcon, LogoutIcon } from "../icons";
 import ClerkSignOutButton from "./ClerkSignOutButton";
+import { cleanErrorMessage } from "@/lib/errors";
 
 const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -106,7 +107,7 @@ export default function SettingsView({
         [a.id]: `Synced · ${j.imported ?? 0} imported, ${j.open ?? 0} open`,
       }));
     } catch (e) {
-      setSyncMsg((m) => ({ ...m, [a.id]: e instanceof Error ? e.message : "Sync failed." }));
+      setSyncMsg((m) => ({ ...m, [a.id]: cleanErrorMessage(e, "Sync failed.") }));
     } finally {
       setSyncingId(null);
     }
@@ -137,7 +138,7 @@ export default function SettingsView({
       setTimeout(() => setProfileStatus("idle"), 1500);
     } catch (e) {
       setProfileStatus("idle");
-      setProfileError(e instanceof Error ? e.message : "Could not save.");
+      setProfileError(cleanErrorMessage(e, "Could not save."));
     }
   };
 

@@ -11,6 +11,7 @@ import {
   formatR,
   formatTradeTime,
 } from "@/lib/format";
+import { cleanErrorMessage } from "@/lib/errors";
 
 const POLL_MS = 30_000;
 
@@ -99,7 +100,7 @@ export default function TodaysTrades({
       setSyncMsg("Synced");
       setTimeout(() => setSyncMsg(null), 2500);
     } catch (e) {
-      setSyncMsg(e instanceof Error ? e.message : "Sync failed");
+      setSyncMsg(cleanErrorMessage(e, "Sync failed. Please try again."));
     } finally {
       setSyncing(false);
     }

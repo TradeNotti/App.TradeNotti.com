@@ -10,6 +10,7 @@ import {
   ChevronIcon,
 } from "../icons";
 import BlockEditor, { type BlockEditorHandle } from "../editor/BlockEditor";
+import { cleanErrorMessage } from "@/lib/errors";
 import type { TemplateData } from "@/lib/notebook";
 
 // Notes are stored as a stringified TipTap doc. Legacy notes are plain text.
@@ -136,7 +137,7 @@ export default function NotesPanel({
         setError("Nothing was transcribed — try again.");
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Transcription failed");
+      setError(cleanErrorMessage(e, "Transcription failed."));
     } finally {
       setTranscribing(false);
     }

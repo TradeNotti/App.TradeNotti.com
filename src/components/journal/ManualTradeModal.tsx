@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CloseIcon } from "../icons";
+import { cleanErrorMessage } from "@/lib/errors";
 
 type Dir = "LONG" | "SHORT";
 
@@ -64,7 +65,7 @@ export default function ManualTradeModal({
       if (!res.ok) throw new Error(j.error || "Could not save.");
       onSaved(j.id);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save.");
+      setError(cleanErrorMessage(e, "Could not save."));
       setSaving(false);
     }
   };

@@ -12,7 +12,8 @@ import {
 import { getOpenTrades } from "@/lib/trades";
 import { getRulesForAccount } from "@/lib/rules";
 import { getTodayInsight } from "@/lib/ai/daily-insight";
-import { greeting, formatLongDate, titleCase } from "@/lib/format";
+import { titleCase } from "@/lib/format";
+import TodayHeading from "@/components/today/TodayHeading";
 
 export const dynamic = "force-dynamic";
 
@@ -61,10 +62,7 @@ export default async function TodayPage({
 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
-          <div className="kicker mb-2">{formatLongDate()}</div>
-          <h1 className="mb-8 text-2xl font-bold tracking-tight sm:text-3xl">
-            {greeting()}, {displayName}.
-          </h1>
+          <TodayHeading displayName={displayName} />
 
           <div className="flex flex-col gap-5">
             <DailyInsightCard category={insight.category} text={insight.text} />

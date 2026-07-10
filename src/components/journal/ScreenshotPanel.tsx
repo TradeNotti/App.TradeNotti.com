@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { UploadIcon, PlusIcon } from "../icons";
+import { cleanErrorMessage } from "@/lib/errors";
 
 type Kind = "BEFORE" | "AFTER";
 type Shots = { before: string | null; after: string | null };
@@ -142,7 +143,7 @@ export default function ScreenshotPanel({
       }
       onChange({ ...screenshots, [kind.toLowerCase()]: dataUrl });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(cleanErrorMessage(e, "Upload failed."));
     } finally {
       setBusy(null);
     }
