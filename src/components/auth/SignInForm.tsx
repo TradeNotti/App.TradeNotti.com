@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useClerk, useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const inputClass =
@@ -11,7 +10,16 @@ const inputClass =
 const buttonClass =
   "mt-1 flex items-center justify-center rounded-lg bg-gradient-to-r from-accent to-[#7b6bf9] px-4 py-2.5 text-[14px] font-semibold text-white shadow-lg shadow-accent/25 transition-opacity hover:opacity-90 disabled:opacity-60";
 
-type Mode = "signIn" | "forgot" | "reset";
+type Mode = "signIn" | "emailCode" | "forgot" | "reset";
+
+// After Clerk sets the session cookie, navigate with a FULL page load rather
+// than a client-side router.push. A soft navigation can reach the middleware
+// before the session cookie is committed, which bounces the user straight back
+// to /login — the classic "correct password but stuck on the login page" bug.
+// A hard navigation guarantees the browser re-requests /today with the cookie.
+function enterApp() {
+  window.location.assign("/today");
+}
 
 function errMsg(err: unknown, fallback: string): string {
   const e = err as { errors?: { longMessage?: string; message?: string }[] };
@@ -46,18 +54,20 @@ async function saveCredential(id: string, password: string) {
 }
 
 /**
- * Single-step email + password sign-in with an inline forgot-password reset
- * flow (send code -> enter code + new password), all on one branded card.
- * Built on the stable Clerk instance API.
+ * Single-step email + password sign-in, with two safety nets:
+ *  - an email-code fallback when the account/instance can't complete a password
+ *    sign-in (so users are never dead-ended), and
+ *  - an inline forgot-password reset flow (send code -> code + new password).
+ * All on one branded card, built on the stable Clerk instance API.
  */
 export default function SignInForm() {
   const clerk = useClerk();
   const { isSignedIn, isLoaded } = useUser();
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  const [emailCode, setEmailCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -67,8 +77,8 @@ export default function SignInForm() {
   // showing the sign-in form (which would otherwise error / push the user to
   // reset their password).
   useEffect(() => {
-    if (isLoaded && isSignedIn) router.replace("/today");
-  }, [isLoaded, isSignedIn, router]);
+    if (isLoaded && isSignedIn) enterApp();
+  }, [isLoaded, isSignedIn]);
 
   function go(next: Mode) {
     setMode(next);
@@ -78,7 +88,26 @@ export default function SignInForm() {
 
   async function finish(sessionId: string | null) {
     await clerk.setActive({ session: sessionId });
-    router.push("/today");
+    enterApp();
+  }
+
+  // Fall back to a one-time email code when the password path can't complete —
+  // returns true if a code was sent and the UI switched to the code step.
+  async function tryEmailCodeFallback(
+    factors: { strategy: string; emailAddressId?: string }[],
+  ): Promise<boolean> {
+    const emailFactor = factors.find(
+      (f) => f.strategy === "email_code" && f.emailAddressId,
+    );
+    if (!emailFactor?.emailAddressId) return false;
+    await clerk.client.signIn.prepareFirstFactor({
+      strategy: "email_code",
+      emailAddressId: emailFactor.emailAddressId,
+    });
+    setEmailCode("");
+    go("emailCode");
+    setInfo("We emailed you a 6-digit sign-in code.");
+    return true;
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -98,14 +127,21 @@ export default function SignInForm() {
       // the password factor (this is NOT extra verification, just the second
       // step of the same password login).
       if (res.status === "needs_first_factor") {
-        const canPassword = res.supportedFirstFactors?.some(
-          (f) => f.strategy === "password",
-        );
-        if (canPassword) {
+        const factors = res.supportedFirstFactors ?? [];
+        const canPassword = factors.some((f) => f.strategy === "password");
+        if (canPassword && password) {
           res = await clerk.client.signIn.attemptFirstFactor({
             strategy: "password",
             password,
           });
+        }
+        // Password still didn't get us in (wrong/unsupported): if the account
+        // can sign in with an email code, send one instead of dead-ending.
+        if (res.status !== "complete") {
+          if (await tryEmailCodeFallback(factors)) {
+            setLoading(false);
+            return;
+          }
         }
       }
 
@@ -127,10 +163,31 @@ export default function SignInForm() {
     } catch (err) {
       // If we're already signed in on this browser, just enter the app.
       if (isAlreadySignedIn(err)) {
-        router.replace("/today");
+        enterApp();
         return;
       }
       setError(errMsg(err, "Invalid email or password."));
+      setLoading(false);
+    }
+  }
+
+  async function handleEmailCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await clerk.client.signIn.attemptFirstFactor({
+        strategy: "email_code",
+        code: emailCode.trim(),
+      });
+      if (res.status === "complete") {
+        return void (await finish(res.createdSessionId));
+      }
+      setError("Couldn't verify that code. Please try again.");
+      setLoading(false);
+    } catch (err) {
+      setError(errMsg(err, "Invalid or expired code."));
       setLoading(false);
     }
   }
@@ -183,9 +240,11 @@ export default function SignInForm() {
   const heading =
     mode === "signIn"
       ? { title: "Sign in to TradeNotti", sub: "Welcome back. Enter your details to continue." }
-      : mode === "forgot"
-        ? { title: "Reset your password", sub: "Enter your email and we'll send you a reset code." }
-        : { title: "Enter reset code", sub: "Check your email for the code, then set a new password." };
+      : mode === "emailCode"
+        ? { title: "Enter sign-in code", sub: "We emailed you a 6-digit code to finish signing in." }
+        : mode === "forgot"
+          ? { title: "Reset your password", sub: "Enter your email and we'll send you a reset code." }
+          : { title: "Enter reset code", sub: "Check your email for the code, then set a new password." };
 
   return (
     <div className="w-[22rem] max-w-full rounded-2xl border border-accent/10 bg-surface px-7 py-7 shadow-2xl shadow-accent/10 ring-1 ring-accent/10">
@@ -235,6 +294,34 @@ export default function SignInForm() {
           <div id="clerk-captcha" />
           <button type="submit" disabled={loading} className={buttonClass}>
             {loading ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      )}
+
+      {mode === "emailCode" && (
+        <form onSubmit={handleEmailCode} className="flex flex-col gap-3.5">
+          {info && <p className="text-[12.5px] text-profit">{info}</p>}
+          <Field label="Sign-in code">
+            <input
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+              value={emailCode}
+              onChange={(e) => setEmailCode(e.target.value)}
+              placeholder="123456"
+              className={inputClass}
+            />
+          </Field>
+          {error && <p className="text-[12.5px] text-loss">{error}</p>}
+          <button type="submit" disabled={loading} className={buttonClass}>
+            {loading ? "Verifying…" : "Verify & sign in"}
+          </button>
+          <button
+            type="button"
+            onClick={() => go("signIn")}
+            className="text-center text-[13px] font-medium text-faint hover:text-ink"
+          >
+            Back to sign in
           </button>
         </form>
       )}
