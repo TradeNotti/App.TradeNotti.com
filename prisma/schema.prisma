@@ -269,6 +269,8 @@ model Trade {
   marketDirection String? // e.g. "Bullish", "Bearish", "Ranging"
   phaseOfMarket   String? // e.g. "Accumulation", "Markup", "Distribution", "Markdown"
   stopLossNote    String? // trader's own stop-loss note (e.g. "27 pips", "below structure")
+  // User-defined properties (mainly for backtests): [{ id, name, value }].
+  customProps     Json?
 
   tags        TagsOnTrades[]
   screenshots Screenshot[]

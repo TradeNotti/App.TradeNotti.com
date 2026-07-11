@@ -23,9 +23,17 @@ export interface JournalRow {
 }
 
 // Full detail for a single trade's journal page.
+export interface CustomProp {
+  id: string;
+  name: string;
+  value: string;
+}
+
 export interface JournalDetail extends JournalRow {
   closedAt: string | null;
   exitPrice: number | null;
+  isBacktest: boolean;
+  customProps: CustomProp[];
   volume: number | null;
   notes: string | null;
   marketDirection: string | null;
@@ -101,6 +109,10 @@ export async function getTradeDetail(
     openedAt: t.openedAt.toISOString(),
     closedAt: t.closedAt ? t.closedAt.toISOString() : null,
     exitPrice: num(t.exitPrice),
+    isBacktest: t.isBacktest,
+    customProps: Array.isArray(t.customProps)
+      ? (t.customProps as unknown as CustomProp[])
+      : [],
     volume: num(t.volume),
     notes: t.notes,
     marketDirection: t.marketDirection,

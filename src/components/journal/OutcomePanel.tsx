@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { JournalDetail } from "@/lib/journal";
+import type { JournalDetail, CustomProp } from "@/lib/journal";
 import type { TradeGrade } from "@prisma/client";
 import { signedClass } from "./cells";
 import {
@@ -13,6 +13,7 @@ import {
   formatPercent,
 } from "@/lib/format";
 import InlineSelect, { type SelectOption } from "./InlineSelect";
+import { CloseIcon, PlusIcon } from "../icons";
 
 const GRADE_OPTIONS: SelectOption[] = [
   { value: "HIGH_PROBABILITY", label: "High probability" },
@@ -23,6 +24,15 @@ const DIRECTION_OPTIONS: SelectOption[] = [
   { value: "Main trend", label: "Main trend" },
   { value: "Countertrend", label: "Countertrend" },
 ];
+
+function newPropId(): string {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch {
+    /* fall through */
+  }
+  return `p_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`;
+}
 
 function gradeTrigger(opt: SelectOption | null) {
   if (!opt) return <span className="text-faint">—</span>;
@@ -46,7 +56,6 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-// Right-aligned inline text field that saves on blur / Enter.
 function EditableText({
   value,
   placeholder,
@@ -76,8 +85,6 @@ function EditableText({
   );
 }
 
-// Right-aligned inline NUMBER field. Shows a formatted value when idle, a raw
-// numeric input when focused. Saves on blur / Enter.
 function EditableNum({
   value,
   format,
@@ -136,6 +143,85 @@ function EditableNum({
   );
 }
 
+// One user-defined property: editable name + value, committed on blur.
+function PropRow({
+  prop,
+  onSave,
+  onRemove,
+}: {
+  prop: CustomProp;
+  onSave: (next: CustomProp) => void;
+  onRemove: () => void;
+}) {
+  const [name, setName] = useState(prop.name);
+  const [value, setValue] = useState(prop.value);
+  const commit = () => {
+    if (name !== prop.name || value !== prop.value) onSave({ ...prop, name, value });
+  };
+  return (
+    <div className="group flex items-center gap-2">
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onBlur={commit}
+        placeholder="Property"
+        className="w-[40%] rounded-md bg-black/[0.02] px-2 py-1.5 text-[12.5px] font-medium text-ink-soft outline-none placeholder:text-faint focus:bg-black/[0.04]"
+      />
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        placeholder="Value"
+        className="flex-1 rounded-md bg-black/[0.02] px-2 py-1.5 text-[12.5px] text-ink outline-none placeholder:text-faint focus:bg-black/[0.04]"
+      />
+      <button
+        onClick={onRemove}
+        aria-label="Remove property"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-faint opacity-0 transition-opacity hover:text-loss group-hover:opacity-100"
+      >
+        <CloseIcon size={13} />
+      </button>
+    </div>
+  );
+}
+
+function CustomProps({
+  props,
+  onChange,
+}: {
+  props: CustomProp[];
+  onChange: (next: CustomProp[]) => void;
+}) {
+  const save = (updated: CustomProp) =>
+    onChange(props.map((p) => (p.id === updated.id ? updated : p)));
+  const remove = (id: string) => onChange(props.filter((p) => p.id !== id));
+  const add = () => onChange([...props, { id: newPropId(), name: "", value: "" }]);
+
+  return (
+    <div className="mt-4 border-t border-line pt-4">
+      <div className="kicker mb-2.5">Properties</div>
+      {props.length > 0 && (
+        <div className="mb-2 flex flex-col gap-1.5">
+          {props.map((p) => (
+            <PropRow
+              key={p.id}
+              prop={p}
+              onSave={save}
+              onRemove={() => remove(p.id)}
+            />
+          ))}
+        </div>
+      )}
+      <button
+        onClick={add}
+        className="flex items-center gap-1 text-[12.5px] font-medium text-accent hover:underline"
+      >
+        <PlusIcon size={13} /> Add property
+      </button>
+    </div>
+  );
+}
+
 export default function OutcomePanel({
   detail,
   metrics,
@@ -155,12 +241,7 @@ export default function OutcomePanel({
   onChange: (patch: Partial<JournalDetail>) => void;
 }) {
   const [saving, setSaving] = useState(false);
-
-  const hasSetup = Boolean(
-    detail.grade || detail.marketDirection || detail.phaseOfMarket,
-  );
   const [showSetup, setShowSetup] = useState(false);
-  const setupVisible = hasSetup || showSetup;
 
   const patch = async (body: Partial<JournalDetail>) => {
     onChange(body);
@@ -171,7 +252,6 @@ export default function OutcomePanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      // The server recomputes R and ROI from the new prices — reflect them.
       if (res.ok) {
         const j = (await res.json().catch(() => null)) as
           | { trade?: JournalDetail }
@@ -193,6 +273,77 @@ export default function OutcomePanel({
     detail.stopLoss != null
       ? formatPips(detail.entry, detail.stopLoss, detail.symbol)
       : undefined;
+
+  const gradeRow = (
+    <Row label="Trade grade">
+      <InlineSelect
+        value={detail.grade ?? null}
+        options={GRADE_OPTIONS}
+        onChange={(v) => patch({ grade: (v || null) as TradeGrade | null })}
+        renderTrigger={gradeTrigger}
+      />
+    </Row>
+  );
+  const marketDirRow = (
+    <Row label="Market direction">
+      <InlineSelect
+        value={detail.marketDirection ?? null}
+        options={DIRECTION_OPTIONS}
+        onChange={(v) => patch({ marketDirection: v || null })}
+      />
+    </Row>
+  );
+  const phaseRow = (
+    <Row label="Phase of market">
+      <EditableText
+        value={detail.phaseOfMarket}
+        placeholder="e.g. Correction"
+        onSave={(phaseOfMarket) => patch({ phaseOfMarket })}
+      />
+    </Row>
+  );
+
+  // ---- Backtest: trimmed field set + user-defined properties ----
+  if (detail.isBacktest) {
+    return (
+      <section className="rounded-2xl border border-line bg-surface p-6">
+        <div className="kicker mb-3">Outcome</div>
+        <div className="flex flex-col">
+          <Row label="Stop loss">
+            <EditableNum
+              value={detail.stopLoss}
+              format={(n) => formatPrice(n)}
+              hint={slPips}
+              onSave={(stopLoss) => patch({ stopLoss })}
+            />
+          </Row>
+          <Row label="Entry date">{metrics.entryAt}</Row>
+          <Row label="Exit trade">
+            {detail.closedAt ? `${metrics.exitAt} · ${metrics.duration}` : "Open"}
+          </Row>
+          <Row label="ROI">
+            <span className={signedClass(detail.roi)}>{formatPercent(detail.roi)}</span>
+          </Row>
+          {marketDirRow}
+          {phaseRow}
+          {gradeRow}
+        </div>
+
+        <CustomProps
+          props={detail.customProps ?? []}
+          onChange={(customProps) => patch({ customProps })}
+        />
+
+        {saving && <p className="mt-3 text-[11px] text-faint">Saving…</p>}
+      </section>
+    );
+  }
+
+  // ---- Live / journaled trade: full editable panel ----
+  const hasSetup = Boolean(
+    detail.grade || detail.marketDirection || detail.phaseOfMarket,
+  );
+  const setupVisible = hasSetup || showSetup;
 
   return (
     <section className="rounded-2xl border border-line bg-surface p-6">
@@ -258,28 +409,9 @@ export default function OutcomePanel({
 
         {setupVisible && (
           <>
-            <Row label="Trade grade">
-              <InlineSelect
-                value={detail.grade ?? null}
-                options={GRADE_OPTIONS}
-                onChange={(v) => patch({ grade: (v || null) as TradeGrade | null })}
-                renderTrigger={gradeTrigger}
-              />
-            </Row>
-            <Row label="Market direction">
-              <InlineSelect
-                value={detail.marketDirection ?? null}
-                options={DIRECTION_OPTIONS}
-                onChange={(v) => patch({ marketDirection: v || null })}
-              />
-            </Row>
-            <Row label="Phase of market">
-              <EditableText
-                value={detail.phaseOfMarket}
-                placeholder="e.g. Correction"
-                onSave={(phaseOfMarket) => patch({ phaseOfMarket })}
-              />
-            </Row>
+            {gradeRow}
+            {marketDirRow}
+            {phaseRow}
           </>
         )}
       </div>

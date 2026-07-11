@@ -60,6 +60,7 @@ export async function PATCH(
     takeProfit?: number | null;
     volume?: number | null;
     pnl?: number | null;
+    customProps?: { id: string; name: string; value: string }[];
   };
 
   const resolved = await resolveTrade(id);
@@ -97,6 +98,15 @@ export async function PATCH(
   if (body.takeProfit !== undefined) data.takeProfit = num(body.takeProfit);
   if (body.volume !== undefined) data.volume = num(body.volume);
   if (body.pnl !== undefined) data.pnl = num(body.pnl);
+  if (Array.isArray(body.customProps)) {
+    data.customProps = body.customProps
+      .map((p) => ({
+        id: String(p.id ?? ""),
+        name: String(p.name ?? ""),
+        value: String(p.value ?? ""),
+      }))
+      .filter((p) => p.id);
+  }
 
   // Recompute R whenever a price/direction that feeds it may have changed.
   const touchesR =
