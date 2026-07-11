@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { ManagedAccount } from "@/lib/settings";
 import { CloseIcon } from "../icons";
+import { cleanErrorMessage } from "@/lib/errors";
 
 const input =
   "w-full rounded-lg border border-line px-3 py-2.5 text-[14px] outline-none focus:border-accent/40";
@@ -33,11 +34,14 @@ export default function ConnectBrokerModal({
   }, [onClose]);
 
   const connect = async () => {
+    if (saving) return;
     setSaving(true);
     setError(null);
+    // Track an account we create in this attempt so we can roll it back if the
+    // broker connection fails — otherwise a failed/retried connect leaves behind
+    // orphaned, unconnected accounts.
+    let createdId: string | null = null;
     try {
-      // In "create" mode we create the account first, then link the broker —
-      // so the user connects in a single step (no second connection).
       let target: ManagedAccount;
       if (mode === "create") {
         const res = await fetch("/api/accounts", {
@@ -53,6 +57,7 @@ export default function ConnectBrokerModal({
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(j.error || "Could not create account.");
         target = j.account;
+        createdId = target.id;
       } else {
         target = account!;
       }
@@ -65,9 +70,14 @@ export default function ConnectBrokerModal({
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Could not connect.");
 
+      createdId = null; // success — keep the account
       onDone({ ...target, connected: true, brokerLogin: login, syncStatus: "idle" });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not connect.");
+      // Undo the just-created account so it doesn't pile up on retry.
+      if (createdId) {
+        await fetch(`/api/accounts/${createdId}`, { method: "DELETE" }).catch(() => {});
+      }
+      setError(cleanErrorMessage(e, "Could not connect. Check your details and try again."));
     } finally {
       setSaving(false);
     }

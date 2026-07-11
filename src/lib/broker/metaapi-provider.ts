@@ -298,6 +298,8 @@ export async function provisionMetaApiAccount(creds: {
     cache: "no-store",
   });
   if (!res.ok) throw await apiError(res, "provisioning");
-  const data = (await res.json()) as { id: string };
-  return data.id;
+  const data = (await res.json()) as { id: string | number };
+  // MetaApi normally returns a string id; coerce defensively so a numeric id
+  // can't break the (String) DB column.
+  return String(data.id);
 }

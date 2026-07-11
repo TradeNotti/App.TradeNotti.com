@@ -36,7 +36,7 @@ export async function connectAccountBroker(
   await prisma.account.update({
     where: { id: accountId },
     data: {
-      metaApiAccountId,
+      metaApiAccountId: String(metaApiAccountId),
       brokerLogin: creds.login,
       brokerServer: creds.server,
       syncStatus: "idle",
