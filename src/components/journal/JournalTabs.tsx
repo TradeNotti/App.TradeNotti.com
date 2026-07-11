@@ -4,7 +4,6 @@ import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { JournalRow } from "@/lib/journal";
 import JournalView from "./JournalView";
-import ManualTradeModal from "./ManualTradeModal";
 import { PlusIcon } from "../icons";
 
 type View = "live" | "backtest";
@@ -27,7 +26,26 @@ export default function JournalTabs({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [view, setView] = useState<View>(initialView);
-  const [modalFor, setModalFor] = useState<View | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  // Create an empty trade and open it on the full journaling page — the trade
+  // is filled in there inline (no popup form).
+  const createTrade = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const res = await fetch("/api/trades/manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blank: true, isBacktest: view === "backtest" }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.id) router.push(`/journal/${j.id}`);
+      else setCreating(false);
+    } catch {
+      setCreating(false);
+    }
+  };
 
   const setTab = (v: View) => {
     setView(v);
@@ -72,38 +90,28 @@ export default function JournalTabs({
 
   const newButton = (
     <button
-      onClick={() => setModalFor(view)}
-      className="flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-accent/90"
+      onClick={createTrade}
+      disabled={creating}
+      className="flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-accent/90 disabled:opacity-60"
     >
-      <PlusIcon size={15} /> {isBacktest ? "New backtest" : "Log trade"}
+      <PlusIcon size={15} />{" "}
+      {creating ? "Opening…" : isBacktest ? "New backtest" : "Log trade"}
     </button>
   );
 
   return (
-    <>
-      <JournalView
-        trades={trades}
-        options={options}
-        title="Journal"
-        basePath="/journal"
-        headerRight={newButton}
-        belowHeader={tabs}
-        emptyLabel={
-          isBacktest
-            ? "No backtest trades yet — log your first one."
-            : "No trades yet — log one, or connect a broker to auto-import."
-        }
-      />
-      {modalFor !== null && (
-        <ManualTradeModal
-          isBacktest={modalFor === "backtest"}
-          onClose={() => setModalFor(null)}
-          onSaved={(id) => {
-            setModalFor(null);
-            router.push(`/journal/${id}`);
-          }}
-        />
-      )}
-    </>
+    <JournalView
+      trades={trades}
+      options={options}
+      title="Journal"
+      basePath="/journal"
+      headerRight={newButton}
+      belowHeader={tabs}
+      emptyLabel={
+        isBacktest
+          ? "No backtest trades yet — log your first one."
+          : "No trades yet — log one, or connect a broker to auto-import."
+      }
+    />
   );
 }

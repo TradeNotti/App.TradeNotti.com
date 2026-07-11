@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as {
     accountId?: string;
     isBacktest?: boolean;
+    blank?: boolean;
     symbol?: string;
     direction?: string;
     entry?: number;
@@ -21,11 +22,16 @@ export async function POST(req: NextRequest) {
     date?: string;
   };
 
-  if (!body.symbol?.trim() || body.entry == null || Number.isNaN(Number(body.entry))) {
-    return NextResponse.json(
-      { error: "Symbol and entry price are required." },
-      { status: 400 },
-    );
+  // A "blank" trade is created empty and filled in on the full detail page
+  // (the journaling layout) — no upfront form. Otherwise symbol + entry are
+  // required.
+  if (!body.blank) {
+    if (!body.symbol?.trim() || body.entry == null || Number.isNaN(Number(body.entry))) {
+      return NextResponse.json(
+        { error: "Symbol and entry price are required." },
+        { status: 400 },
+      );
+    }
   }
   const direction: TradeDirection = body.direction === "SHORT" ? "SHORT" : "LONG";
 
@@ -40,9 +46,9 @@ export async function POST(req: NextRequest) {
   const trade = await createManualTrade(
     account.id,
     {
-      symbol: body.symbol,
+      symbol: body.symbol?.trim() || "Untitled trade",
       direction,
-      entry: Number(body.entry),
+      entry: body.entry == null ? 0 : Number(body.entry),
       exitPrice: num(body.exitPrice),
       stopLoss: num(body.stopLoss),
       takeProfit: num(body.takeProfit),

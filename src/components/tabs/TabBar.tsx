@@ -45,7 +45,7 @@ const SECTIONS: { href: string; label: string; icon: IconKey }[] = [
 
 export default function TabBar() {
   const router = useRouter();
-  const { tabs, activeHref, closeTab } = useTabs();
+  const { tabs, activeId, switchTo, openNewTab, closeTab } = useTabs();
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -67,38 +67,30 @@ export default function TabBar() {
   // server/client mismatch.
   if (!mounted || tabs.length === 0) return null;
 
-  // Exactly one tab is active: the one that matches the current path most
-  // specifically. An exact href wins; otherwise the longest prefix match, so
-  // "/journal" doesn't also light up while you're on "/journal/<id>".
-  const exact = tabs.find((t) => t.href === activeHref);
-  const activeTabHref =
-    exact?.href ??
-    tabs
-      .filter((t) => activeHref.startsWith(t.href + "/"))
-      .sort((a, b) => b.href.length - a.href.length)[0]?.href ??
-    null;
-  const isActive = (href: string) => href === activeTabHref;
-
-  const onClose = (e: React.MouseEvent, href: string) => {
+  const onClose = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    const idx = tabs.findIndex((t) => t.href === href);
-    const wasActive = isActive(href);
-    closeTab(href);
-    if (wasActive) {
-      const neighbor = tabs[idx - 1] ?? tabs[idx + 1];
-      router.push(neighbor ? neighbor.href : "/today");
-    }
+    const navigateTo = closeTab(id);
+    if (navigateTo) router.push(navigateTo);
+  };
+
+  const onOpenSection = (href: string, title: string, icon: IconKey) => {
+    setMenuOpen(false);
+    openNewTab(href, title, icon);
+    router.push(href);
   };
 
   return (
     <div className="relative flex h-11 shrink-0 items-center gap-1 border-b border-line bg-surface px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden overflow-x-auto">
       {tabs.map((t) => {
         const Icon = ICONS[t.icon] ?? NotebookIcon;
-        const active = isActive(t.href);
+        const active = t.id === activeId;
         return (
           <button
-            key={t.href}
-            onClick={() => router.push(t.href)}
+            key={t.id}
+            onClick={() => {
+              switchTo(t.id);
+              router.push(t.href);
+            }}
             className={`group flex h-8 shrink-0 items-center gap-2 rounded-lg pl-2.5 pr-1.5 text-[13px] transition-colors ${
               active
                 ? "bg-canvas font-medium text-ink ring-1 ring-line"
@@ -110,7 +102,7 @@ export default function TabBar() {
             </span>
             <span className="max-w-[9rem] truncate">{t.title}</span>
             <span
-              onClick={(e) => onClose(e, t.href)}
+              onClick={(e) => onClose(e, t.id)}
               role="button"
               aria-label={`Close ${t.title}`}
               className={`flex h-4.5 w-4.5 items-center justify-center rounded text-faint hover:bg-black/10 hover:text-ink ${
@@ -140,10 +132,7 @@ export default function TabBar() {
               return (
                 <button
                   key={s.href}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    router.push(s.href);
-                  }}
+                  onClick={() => onOpenSection(s.href, s.label, s.icon)}
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[13px] text-ink hover:bg-black/[0.04]"
                 >
                   <span className="text-faint">

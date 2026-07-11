@@ -4,6 +4,14 @@ import { useState } from "react";
 import type { JournalDetail } from "@/lib/journal";
 import type { TradeGrade } from "@prisma/client";
 import { signedClass } from "./cells";
+import {
+  formatPrice,
+  formatMoney,
+  formatLots,
+  formatPips,
+  formatR,
+  formatPercent,
+} from "@/lib/format";
 import InlineSelect, { type SelectOption } from "./InlineSelect";
 
 const GRADE_OPTIONS: SelectOption[] = [
@@ -16,7 +24,6 @@ const DIRECTION_OPTIONS: SelectOption[] = [
   { value: "Countertrend", label: "Countertrend" },
 ];
 
-// Trade grade renders as a colored pill, matching the badges used elsewhere.
 function gradeTrigger(opt: SelectOption | null) {
   if (!opt) return <span className="text-faint">—</span>;
   const cls =
@@ -30,13 +37,7 @@ function gradeTrigger(opt: SelectOption | null) {
   );
 }
 
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-line/60 py-2.5 last:border-0">
       <span className="text-[13px] text-muted">{label}</span>
@@ -45,7 +46,7 @@ function Row({
   );
 }
 
-// A right-aligned inline text field that saves when you click away or press Enter.
+// Right-aligned inline text field that saves on blur / Enter.
 function EditableText({
   value,
   placeholder,
@@ -56,12 +57,10 @@ function EditableText({
   onSave: (next: string | null) => void;
 }) {
   const [draft, setDraft] = useState(value ?? "");
-
   const commit = () => {
     const next = draft.trim() || null;
     if (next !== (value ?? null)) onSave(next);
   };
-
   return (
     <input
       value={draft}
@@ -74,6 +73,66 @@ function EditableText({
       placeholder={placeholder}
       className="w-36 rounded-md bg-transparent px-1 py-0.5 text-right text-[13.5px] font-medium text-ink outline-none placeholder:font-normal placeholder:text-faint hover:bg-black/[0.03] focus:bg-black/[0.03]"
     />
+  );
+}
+
+// Right-aligned inline NUMBER field. Shows a formatted value when idle, a raw
+// numeric input when focused. Saves on blur / Enter.
+function EditableNum({
+  value,
+  format,
+  onSave,
+  hint,
+}: {
+  value: number | null;
+  format: (n: number) => string;
+  onSave: (next: number | null) => void;
+  hint?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  if (editing) {
+    const commit = () => {
+      const t = draft.trim();
+      const next = t === "" ? null : Number(t);
+      setEditing(false);
+      if (next != null && Number.isNaN(next)) return;
+      if (next !== (value ?? null)) onSave(next);
+    };
+    return (
+      <input
+        autoFocus
+        inputMode="decimal"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        className="w-32 rounded-md bg-black/[0.03] px-1.5 py-0.5 text-right text-[13.5px] font-medium text-ink outline-none focus:ring-2 focus:ring-accent/20"
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={() => {
+        setDraft(value == null ? "" : String(value));
+        setEditing(true);
+      }}
+      className="rounded-md px-1.5 py-0.5 text-right text-[13.5px] font-medium hover:bg-black/[0.04]"
+    >
+      {value == null ? (
+        <span className="text-faint">—</span>
+      ) : (
+        <>
+          {format(value)}
+          {hint ? <span className="ml-1.5 text-[11px] text-faint">{hint}</span> : null}
+        </>
+      )}
+    </button>
   );
 }
 
@@ -97,10 +156,6 @@ export default function OutcomePanel({
 }) {
   const [saving, setSaving] = useState(false);
 
-  // A trade counts as "journaled" for the qualitative setup fields once any of
-  // grade / market direction / phase is set. Until then we keep those empty
-  // rows collapsed behind one quiet button so an un-journaled trade isn't a
-  // wall of blank "—" lines — journaling stays one click away.
   const hasSetup = Boolean(
     detail.grade || detail.marketDirection || detail.phaseOfMarket,
   );
@@ -111,15 +166,33 @@ export default function OutcomePanel({
     onChange(body);
     setSaving(true);
     try {
-      await fetch(`/api/trades/${detail.id}`, {
+      const res = await fetch(`/api/trades/${detail.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      // The server recomputes R and ROI from the new prices — reflect them.
+      if (res.ok) {
+        const j = (await res.json().catch(() => null)) as
+          | { trade?: JournalDetail }
+          | null;
+        if (j?.trade) {
+          onChange({
+            rMultiple: j.trade.rMultiple,
+            roi: j.trade.roi,
+            pnl: j.trade.pnl,
+          });
+        }
+      }
     } finally {
       setSaving(false);
     }
   };
+
+  const slPips =
+    detail.stopLoss != null
+      ? formatPips(detail.entry, detail.stopLoss, detail.symbol)
+      : undefined;
 
   return (
     <section className="rounded-2xl border border-line bg-surface p-6">
@@ -128,28 +201,59 @@ export default function OutcomePanel({
         {metrics.pnl}
       </div>
       <div className={`mb-4 text-[14px] font-medium ${signedClass(detail.rMultiple)}`}>
-        {metrics.rMultiple}
+        {formatR(detail.rMultiple)}
       </div>
 
       <div className="flex flex-col">
-        <Row label="Entry date">
-          {metrics.entryAt}
+        <Row label="Entry price">
+          <EditableNum
+            value={detail.entry}
+            format={(n) => formatPrice(n)}
+            onSave={(entry) => patch({ entry: entry ?? 0 })}
+          />
         </Row>
-        <Row label="Exit trade">
-          {detail.closedAt ? `${metrics.exitAt} · ${metrics.duration}` : "Open"}
+        <Row label="Exit price">
+          <EditableNum
+            value={detail.exitPrice}
+            format={(n) => formatPrice(n)}
+            onSave={(exitPrice) => patch({ exitPrice })}
+          />
         </Row>
         <Row label="Stop loss">
-          <EditableText
-            value={detail.stopLossNote}
-            placeholder={metrics.stopLoss}
-            onSave={(stopLossNote) => patch({ stopLossNote })}
+          <EditableNum
+            value={detail.stopLoss}
+            format={(n) => formatPrice(n)}
+            hint={slPips}
+            onSave={(stopLoss) => patch({ stopLoss })}
+          />
+        </Row>
+        <Row label="Take profit">
+          <EditableNum
+            value={detail.takeProfit}
+            format={(n) => formatPrice(n)}
+            onSave={(takeProfit) => patch({ takeProfit })}
+          />
+        </Row>
+        <Row label="P&amp;L ($)">
+          <EditableNum
+            value={detail.pnl}
+            format={(n) => formatMoney(n)}
+            onSave={(pnl) => patch({ pnl })}
           />
         </Row>
         <Row label="Position size">
-          {metrics.positionSize}
+          <EditableNum
+            value={detail.volume}
+            format={(n) => formatLots(n)}
+            onSave={(volume) => patch({ volume })}
+          />
         </Row>
         <Row label="ROI">
-          <span className={signedClass(detail.roi)}>{metrics.roi}</span>
+          <span className={signedClass(detail.roi)}>{formatPercent(detail.roi)}</span>
+        </Row>
+        <Row label="Entry date">{metrics.entryAt}</Row>
+        <Row label="Exit trade">
+          {detail.closedAt ? `${metrics.exitAt} · ${metrics.duration}` : "Open"}
         </Row>
 
         {setupVisible && (
@@ -162,7 +266,6 @@ export default function OutcomePanel({
                 renderTrigger={gradeTrigger}
               />
             </Row>
-
             <Row label="Market direction">
               <InlineSelect
                 value={detail.marketDirection ?? null}
@@ -170,7 +273,6 @@ export default function OutcomePanel({
                 onChange={(v) => patch({ marketDirection: v || null })}
               />
             </Row>
-
             <Row label="Phase of market">
               <EditableText
                 value={detail.phaseOfMarket}

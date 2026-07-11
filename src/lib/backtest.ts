@@ -14,7 +14,7 @@ export interface BacktestInput {
 }
 
 // Reward-to-risk from prices, signed in the trade's favor.
-function computeR(
+export function computeR(
   direction: TradeDirection,
   entry: number,
   exit: number | null,

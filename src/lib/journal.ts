@@ -25,6 +25,7 @@ export interface JournalRow {
 // Full detail for a single trade's journal page.
 export interface JournalDetail extends JournalRow {
   closedAt: string | null;
+  exitPrice: number | null;
   volume: number | null;
   notes: string | null;
   marketDirection: string | null;
@@ -99,6 +100,7 @@ export async function getTradeDetail(
     tags: t.tags.map((x) => x.tag.name),
     openedAt: t.openedAt.toISOString(),
     closedAt: t.closedAt ? t.closedAt.toISOString() : null,
+    exitPrice: num(t.exitPrice),
     volume: num(t.volume),
     notes: t.notes,
     marketDirection: t.marketDirection,
