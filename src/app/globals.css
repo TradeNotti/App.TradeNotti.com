@@ -36,6 +36,57 @@
   color-scheme: light;
 }
 
+/* ---------------------------------------------------------------------------
+   Dark ("black") theme — opt-in via data-theme="dark" on <html>. Overriding the
+   semantic tokens re-themes the whole app in one place. Flipping Tailwind's
+   --color-black to a light value turns every subtle bg-black/[..] tint + hover
+   into a light tint, so interactive states stay visible on dark surfaces.
+   Genuine dark backdrops use the .scrim classes below so they stay dark.
+   ------------------------------------------------------------------------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-ink: #eaebf1;
+  --color-ink-soft: #c4c7d2;
+  --color-muted: #949aa7;
+  --color-faint: #6c7280;
+  --color-line: #2a2c35;
+  --color-surface: #17181e;
+  --color-canvas: #0d0e12;
+
+  --color-profit: #34c98b;
+  --color-profit-soft: #13291f;
+  --color-loss: #f26d6d;
+  --color-loss-soft: #2b1719;
+
+  --color-grade-high: #34c98b;
+  --color-grade-high-bg: #13291f;
+  --color-grade-low: #d6a24e;
+  --color-grade-low-bg: #2b2413;
+
+  --color-accent: #7d6dff;
+  --color-accent-2: #a78bff;
+  --color-accent-bg: #241f45;
+
+  /* Neutral tint base: flips bg-black/[..] hovers to light on dark surfaces. */
+  --color-black: #f1f2f8;
+}
+
+:root[data-theme="dark"] body {
+  background-color: var(--color-canvas);
+  background-image:
+    radial-gradient(52rem 32rem at 12% -6%, rgba(125, 109, 255, 0.1), transparent 60%),
+    radial-gradient(46rem 28rem at 106% 2%, rgba(167, 139, 255, 0.08), transparent 55%);
+}
+
+/* Fixed dark backdrops (modal / lightbox scrims) — dark in every theme. */
+.scrim {
+  background-color: rgba(4, 5, 10, 0.55);
+}
+.scrim-strong {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
 html,
 body {
   color: var(--color-ink);

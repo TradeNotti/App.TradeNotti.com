@@ -35,6 +35,12 @@ export const SunIcon = (p: IconProps) => (
   </Base>
 );
 
+export const MoonIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+  </Base>
+);
+
 export const JournalIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />

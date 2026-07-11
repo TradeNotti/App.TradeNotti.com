@@ -154,7 +154,7 @@ export default function DayTradesModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 scrim" onClick={onClose} aria-hidden />
 
       <div className="relative flex max-h-[88vh] w-full flex-col rounded-t-2xl border border-line bg-surface shadow-xl sm:max-w-xl sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">

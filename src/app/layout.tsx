@@ -36,6 +36,15 @@ export default function RootLayout({
 }) {
   const tree = (
     <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
+      <head>
+        {/* Apply the saved theme before first paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

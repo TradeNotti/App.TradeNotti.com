@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 import { useMobileNav } from "./MobileNav";
 import {
   SunIcon,
@@ -147,7 +148,7 @@ export default function Sidebar() {
       {open && (
         <div
           onClick={close}
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-30 scrim lg:hidden"
           aria-hidden
         />
       )}
@@ -216,6 +217,7 @@ export default function Sidebar() {
         </nav>
 
         <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3">
+          <ThemeToggle />
           {FOOTER.map((item) => (
             <NavLink
               key={item.href}

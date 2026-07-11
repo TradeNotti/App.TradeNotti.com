@@ -65,7 +65,7 @@ export default function AccountModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 scrim" onClick={onClose} aria-hidden />
       <div className="relative w-full rounded-t-2xl border border-line bg-surface p-6 shadow-xl sm:max-w-md sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-[15px] font-semibold">
