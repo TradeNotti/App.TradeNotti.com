@@ -17,6 +17,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
+import { Details, DetailsSummary, DetailsContent } from "@tiptap/extension-details";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
 import { TextStyle, Color } from "@tiptap/extension-text-style";
@@ -85,6 +86,7 @@ const SLASH_ITEMS: SlashItem[] = [
   { title: "Bullet list", desc: "Simple bulleted list", keywords: "bullet unordered list ul", icon: <ListBulletIcon size={16} />, run: (e) => e.chain().focus().toggleBulletList().run() },
   { title: "Numbered list", desc: "Ordered list", keywords: "numbered ordered list ol", icon: <ListOrderedIcon size={16} />, run: (e) => e.chain().focus().toggleOrderedList().run() },
   { title: "To-do list", desc: "Checkbox tasks", keywords: "todo task checkbox check", icon: <ChecklistIcon size={16} />, run: (e) => e.chain().focus().toggleTaskList().run() },
+  { title: "Toggle list", desc: "Collapsible section", keywords: "toggle list collapsible details expand fold accordion dropdown", icon: <span className="text-[11px] font-bold">▸</span>, run: (e) => e.chain().focus().setDetails().updateAttributes("details", { open: true }).run() },
   { title: "Quote", desc: "Capture a quote", keywords: "quote blockquote", icon: <QuoteIcon size={16} />, run: (e) => e.chain().focus().toggleBlockquote().run() },
   { title: "Code block", desc: "Code with syntax", keywords: "code block pre", icon: <CodeBlockIcon size={16} />, run: (e) => e.chain().focus().toggleCodeBlock().run() },
   { title: "Emoji", desc: "Insert an emoji", keywords: "emoji emoticon icon smiley face react sticker", icon: <span className="text-[15px] leading-none">🙂</span>, emoji: true },
@@ -217,6 +219,11 @@ const BlockEditor = forwardRef<
       }),
       TaskList,
       TaskItem.configure({ nested: true }),
+      // Toggle / collapsible block (Notion-style). persist keeps the open state
+      // in the saved document. Summary + Content nodes must be registered too.
+      Details.configure({ persist: true }),
+      DetailsSummary,
+      DetailsContent,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image.configure({ allowBase64: true }),
       TextStyle,

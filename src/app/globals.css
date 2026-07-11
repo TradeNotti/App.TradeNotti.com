@@ -163,6 +163,55 @@ h1 {
   text-decoration: line-through;
 }
 
+/* Toggle list (collapsible details block) */
+.tiptap-content [data-type="details"] {
+  display: flex;
+  gap: 0.4em;
+  align-items: flex-start;
+  margin: 0.35em 0;
+}
+.tiptap-content [data-type="details"] > button {
+  flex: 0 0 auto;
+  width: 1.15em;
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--color-muted);
+}
+.tiptap-content [data-type="details"] > button::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s ease;
+}
+.tiptap-content [data-type="details"].is-open > button::before {
+  transform: rotate(90deg);
+}
+.tiptap-content [data-type="details"] > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* The extension renders the title as <summary> and hides the content via a
+   `hidden` attribute, so we only need to strip the native disclosure marker. */
+.tiptap-content [data-type="details"] summary {
+  font-weight: 600;
+  color: var(--color-ink);
+  list-style: none;
+  cursor: text;
+}
+.tiptap-content [data-type="details"] summary::-webkit-details-marker,
+.tiptap-content [data-type="details"] summary::marker {
+  display: none;
+}
+
 .tiptap-content blockquote {
   border-left: 3px solid var(--color-line);
   padding-left: 1em;
