@@ -16,6 +16,7 @@ import {
 } from "@/lib/format";
 import { DirBadge, GradePill } from "./cells";
 import { ArrowLeftIcon } from "../icons";
+import { useTabTitle } from "../tabs/TabsProvider";
 import ScreenshotPanel from "./ScreenshotPanel";
 import NotesPanel from "./NotesPanel";
 import OutcomePanel from "./OutcomePanel";
@@ -32,6 +33,8 @@ export default function TradeDetail({
 }) {
   // Local copy so edits reflect immediately without a full reload.
   const [detail, setDetail] = useState<JournalDetail>(trade);
+  // Label this page's tab with the instrument instead of a generic "Trade".
+  useTabTitle(detail.symbol);
   const router = useRouter();
   const firstRender = useRef(true);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
