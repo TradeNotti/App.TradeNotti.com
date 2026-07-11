@@ -60,6 +60,9 @@ export async function PATCH(
     takeProfit?: number | null;
     volume?: number | null;
     pnl?: number | null;
+    roi?: number | null;
+    openedAt?: string | null;
+    closedAt?: string | null;
     customProps?: { id: string; name: string; value: string }[];
   };
 
@@ -98,6 +101,21 @@ export async function PATCH(
   if (body.takeProfit !== undefined) data.takeProfit = num(body.takeProfit);
   if (body.volume !== undefined) data.volume = num(body.volume);
   if (body.pnl !== undefined) data.pnl = num(body.pnl);
+  if (body.roi !== undefined) data.roiManual = num(body.roi);
+  // Manually-set entry / exit dates (mainly for backtests). Invalid dates are
+  // ignored; a null exit clears it.
+  if (body.openedAt !== undefined && body.openedAt) {
+    const d = new Date(body.openedAt);
+    if (!Number.isNaN(d.getTime())) data.openedAt = d;
+  }
+  if (body.closedAt !== undefined) {
+    if (body.closedAt === null) {
+      data.closedAt = null;
+    } else {
+      const d = new Date(body.closedAt);
+      if (!Number.isNaN(d.getTime())) data.closedAt = d;
+    }
+  }
   if (Array.isArray(body.customProps)) {
     data.customProps = body.customProps
       .map((p) => ({

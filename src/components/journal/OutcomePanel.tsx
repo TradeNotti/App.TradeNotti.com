@@ -143,6 +143,63 @@ function EditableNum({
   );
 }
 
+// Click-to-edit date (date only). Commits on blur / Enter. Empty clears it.
+function EditableDate({
+  iso,
+  placeholder,
+  onSave,
+}: {
+  iso: string | null;
+  placeholder: string;
+  onSave: (nextIso: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const localValue = iso
+    ? (() => {
+        const d = new Date(iso);
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      })()
+    : "";
+  const display = iso
+    ? new Date(iso).toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
+  if (editing) {
+    const commit = (val: string) => {
+      setEditing(false);
+      if (!val) return onSave(null);
+      const d = new Date(`${val}T12:00:00`);
+      if (!Number.isNaN(d.getTime())) onSave(d.toISOString());
+    };
+    return (
+      <input
+        type="date"
+        autoFocus
+        defaultValue={localValue}
+        onBlur={(e) => commit(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        className="rounded-md bg-black/[0.03] px-1.5 py-0.5 text-right text-[13.5px] font-medium text-ink outline-none focus:ring-2 focus:ring-accent/20"
+      />
+    );
+  }
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="rounded-md px-1.5 py-0.5 text-right text-[13.5px] font-medium hover:bg-black/[0.04]"
+    >
+      {display ?? <span className="text-faint">{placeholder}</span>}
+    </button>
+  );
+}
+
 // One user-defined property: editable name + value, committed on blur.
 function PropRow({
   prop,
@@ -317,12 +374,26 @@ export default function OutcomePanel({
               onSave={(stopLoss) => patch({ stopLoss })}
             />
           </Row>
-          <Row label="Entry date">{metrics.entryAt}</Row>
-          <Row label="Exit trade">
-            {detail.closedAt ? `${metrics.exitAt} · ${metrics.duration}` : "Open"}
+          <Row label="Entry date">
+            <EditableDate
+              iso={detail.openedAt}
+              placeholder="Set date"
+              onSave={(openedAt) => openedAt && patch({ openedAt })}
+            />
+          </Row>
+          <Row label="Exit date">
+            <EditableDate
+              iso={detail.closedAt}
+              placeholder="Set date"
+              onSave={(closedAt) => patch({ closedAt })}
+            />
           </Row>
           <Row label="ROI">
-            <span className={signedClass(detail.roi)}>{formatPercent(detail.roi)}</span>
+            <EditableNum
+              value={detail.roi}
+              format={(n) => formatPercent(n)}
+              onSave={(roi) => patch({ roi })}
+            />
           </Row>
           {marketDirRow}
           {phaseRow}

@@ -260,6 +260,9 @@ model Trade {
   // Realized P&L for closed trades; unrealized (floating) for open trades.
   pnl        Decimal? @db.Decimal(18, 2)
   rMultiple  Decimal? @db.Decimal(8, 2)
+  // Manually-entered ROI %, used for backtests where there's no account P&L to
+  // derive it from. When null, ROI is computed from pnl / account balance.
+  roiManual  Decimal? @db.Decimal(10, 2)
 
   openedAt   DateTime
   closedAt   DateTime?

@@ -89,7 +89,13 @@ export async function getTradeDetail(
 
   const pnl = num(t.pnl);
   const balance = Number(t.account.balance);
-  const roi = pnl != null && balance > 0 ? (pnl / balance) * 100 : null;
+  // A manually-entered ROI (backtests) wins; otherwise derive from P&L.
+  const roi =
+    t.roiManual != null
+      ? Number(t.roiManual)
+      : pnl != null && balance > 0
+        ? (pnl / balance) * 100
+        : null;
 
   const shot = (kind: ScreenshotKind) =>
     t.screenshots.find((s) => s.kind === kind)?.dataUrl ?? null;
