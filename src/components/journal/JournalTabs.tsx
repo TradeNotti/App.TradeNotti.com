@@ -105,7 +105,7 @@ export default function JournalTabs({
       options={options}
       title="Journal"
       basePath="/journal"
-      headerRight={newButton}
+      headerRight={isBacktest ? newButton : undefined}
       belowHeader={tabs}
       emptyLabel={
         isBacktest

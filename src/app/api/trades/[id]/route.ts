@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getActiveAccount } from "@/lib/account";
+import { getActiveAccount, getAccountsForCurrentUser } from "@/lib/account";
 import { getTradeDetail } from "@/lib/journal";
 import { computeR } from "@/lib/backtest";
 import type { TradeGrade, TradeDirection } from "@prisma/client";
@@ -178,4 +178,55 @@ export async function PATCH(
 
   const detail = await getTradeDetail(resolved.account.id, id);
   return NextResponse.json({ trade: detail });
+}
+
+// DELETE /api/trades/:id — remove a trade. Returns a snapshot of the trade so
+// the client can offer an "Undo" (restore) via /api/trades/restore.
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const accounts = await getAccountsForCurrentUser();
+  const owned = new Set(accounts.map((a) => a.id));
+
+  const t = await prisma.trade.findUnique({
+    where: { id },
+    include: { tags: { include: { tag: true } }, screenshots: true },
+  });
+  if (!t || !owned.has(t.accountId)) {
+    return NextResponse.json({ error: "Trade not found" }, { status: 404 });
+  }
+
+  const n = (v: unknown) => (v == null ? null : Number(v));
+  const captured = {
+    id: t.id,
+    accountId: t.accountId,
+    externalId: t.externalId,
+    symbol: t.symbol,
+    direction: t.direction,
+    status: t.status,
+    grade: t.grade,
+    isBacktest: t.isBacktest,
+    entry: Number(t.entry),
+    stopLoss: n(t.stopLoss),
+    takeProfit: n(t.takeProfit),
+    exitPrice: n(t.exitPrice),
+    volume: n(t.volume),
+    pnl: n(t.pnl),
+    rMultiple: n(t.rMultiple),
+    roiManual: n(t.roiManual),
+    openedAt: t.openedAt.toISOString(),
+    closedAt: t.closedAt ? t.closedAt.toISOString() : null,
+    notes: t.notes,
+    marketDirection: t.marketDirection,
+    phaseOfMarket: t.phaseOfMarket,
+    stopLossNote: t.stopLossNote,
+    customProps: t.customProps,
+    tags: t.tags.map((x) => x.tag.name),
+    screenshots: t.screenshots.map((s) => ({ kind: s.kind, dataUrl: s.dataUrl })),
+  };
+
+  await prisma.trade.delete({ where: { id } });
+  return NextResponse.json({ trade: captured });
 }

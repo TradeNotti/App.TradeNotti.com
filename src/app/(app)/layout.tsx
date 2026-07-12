@@ -4,6 +4,7 @@ import RefreshOnReturn from "@/components/RefreshOnReturn";
 import { TabsProvider } from "@/components/tabs/TabsProvider";
 import TabBar from "@/components/tabs/TabBar";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
+import { ToastProvider } from "@/components/Toast";
 import { requireUser } from "@/lib/auth";
 
 export default async function AppLayout({
@@ -16,6 +17,7 @@ export default async function AppLayout({
     <MobileNavProvider>
       <TabsProvider>
         <ConfirmProvider>
+          <ToastProvider>
           <RefreshOnReturn />
           <div className="flex h-screen overflow-hidden">
             <Sidebar />
@@ -24,6 +26,7 @@ export default async function AppLayout({
               {children}
             </div>
           </div>
+          </ToastProvider>
         </ConfirmProvider>
       </TabsProvider>
     </MobileNavProvider>

@@ -16,8 +16,10 @@ import {
   formatAbsolute,
 } from "@/lib/format";
 import { GradePill } from "./cells";
-import { ArrowLeftIcon } from "../icons";
+import { ArrowLeftIcon, TrashIcon } from "../icons";
 import { useTabTitle } from "../tabs/TabsProvider";
+import { useConfirm } from "../ConfirmDialog";
+import { useToast } from "../Toast";
 import ScreenshotPanel from "./ScreenshotPanel";
 import NotesPanel from "./NotesPanel";
 import OutcomePanel from "./OutcomePanel";
@@ -37,6 +39,39 @@ export default function TradeDetail({
   // Label this page's tab with the instrument instead of a generic "Trade".
   useTabTitle(detail.symbol);
   const router = useRouter();
+  const confirm = useConfirm();
+  const toast = useToast();
+
+  // Delete this trade, then offer a Gmail-style "Undo" that restores it.
+  const deleteTrade = async () => {
+    const ok = await confirm({
+      title: "Delete this trade?",
+      message: "It's removed from your journal. You can undo right after.",
+      confirmLabel: "Delete trade",
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/trades/${detail.id}`, { method: "DELETE" });
+    const j = (await res.json().catch(() => null)) as { trade?: { id: string } } | null;
+    router.push(backHref);
+    router.refresh();
+    const snapshot = j?.trade;
+    toast("Trade deleted", {
+      action: snapshot
+        ? {
+            label: "Undo",
+            onClick: async () => {
+              await fetch("/api/trades/restore", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(snapshot),
+              });
+              router.push(`/journal/${snapshot.id}`);
+              router.refresh();
+            },
+          }
+        : undefined,
+    });
+  };
   const firstRender = useRef(true);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -99,6 +134,14 @@ export default function TradeDetail({
             onChange={(direction) => patchTrade({ direction })}
           />
           <GradePill grade={detail.grade} />
+          <button
+            onClick={deleteTrade}
+            aria-label="Delete trade"
+            title="Delete trade"
+            className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-faint transition-colors hover:bg-loss-soft hover:text-loss"
+          >
+            <TrashIcon size={16} />
+          </button>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_340px]">

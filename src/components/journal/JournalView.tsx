@@ -217,7 +217,7 @@ export default function JournalView({
                     <th>Dir.</th>
                     <th className="text-right">Entry</th>
                     <th className="text-right">SL</th>
-                    <th className="text-right">TP</th>
+                    <th className="text-right">Tgt RR</th>
                     <th className="text-right">P&amp;L</th>
                     <th className="text-right">R</th>
                     <th>Grade</th>
