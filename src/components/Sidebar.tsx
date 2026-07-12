@@ -100,6 +100,20 @@ export default function Sidebar() {
     if (hideTimer.current) clearTimeout(hideTimer.current);
   }, []);
 
+  // While the collapsed sidebar is peeked in, hide it the moment the pointer
+  // moves off it — so it never stays open ("stagnant") after the mouse leaves,
+  // even if a plain mouseleave is missed. 240px = the sidebar width (w-60).
+  useEffect(() => {
+    if (!collapsed || !peek) return;
+    const onMove = (e: PointerEvent) => {
+      if (e.clientX > 248) hidePeek();
+      else showPeek();
+    };
+    document.addEventListener("pointermove", onMove);
+    return () => document.removeEventListener("pointermove", onMove);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collapsed, peek]);
+
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
   const close = () => {

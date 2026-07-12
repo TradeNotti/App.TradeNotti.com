@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTabs, type IconKey } from "./TabsProvider";
 import {
@@ -30,38 +30,12 @@ const ICONS: Record<IconKey, (p: { size?: number }) => React.ReactNode> = {
   doc: NotebookIcon,
 };
 
-// Sections offered by the "+" new-tab menu.
-const SECTIONS: { href: string; label: string; icon: IconKey }[] = [
-  { href: "/today", label: "Today", icon: "today" },
-  { href: "/journal", label: "Journal", icon: "journal" },
-  { href: "/analytics", label: "Analytics", icon: "analytics" },
-  { href: "/notebook", label: "Notebook", icon: "notebook" },
-  { href: "/rules", label: "Rules", icon: "rules" },
-  { href: "/partners", label: "Partners", icon: "partners" },
-  { href: "/resources", label: "Resources", icon: "resources" },
-  { href: "/pinboard", label: "Pinboard", icon: "pinboard" },
-  { href: "/settings", label: "Settings", icon: "settings" },
-];
-
 export default function TabBar() {
   const router = useRouter();
   const { tabs, activeId, switchTo, openNewTab, closeTab } = useTabs();
   const [mounted, setMounted] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [menuOpen]);
 
   // Render nothing until hydrated (tabs live in localStorage) to avoid a
   // server/client mismatch.
@@ -73,10 +47,10 @@ export default function TabBar() {
     if (navigateTo) router.push(navigateTo);
   };
 
-  const onOpenSection = (href: string, title: string, icon: IconKey) => {
-    setMenuOpen(false);
-    openNewTab(href, title, icon);
-    router.push(href);
+  // "+" opens a fresh tab straight away (on Today, the app's home).
+  const onNewTab = () => {
+    openNewTab("/today", "Today", "today");
+    router.push("/today");
   };
 
   return (
@@ -115,36 +89,15 @@ export default function TabBar() {
         );
       })}
 
-      {/* New-tab menu */}
-      <div className="relative" ref={menuRef}>
-        <button
-          onClick={() => setMenuOpen((o) => !o)}
-          aria-label="Open a section in a new tab"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04] hover:text-ink"
-        >
-          <PlusIcon size={15} />
-        </button>
-        {menuOpen && (
-          <div className="absolute left-0 top-full z-40 mt-1 w-48 rounded-xl border border-line bg-surface p-1.5 shadow-xl shadow-black/10">
-            <div className="kicker px-2 py-1">Open a section</div>
-            {SECTIONS.map((s) => {
-              const Icon = ICONS[s.icon];
-              return (
-                <button
-                  key={s.href}
-                  onClick={() => onOpenSection(s.href, s.label, s.icon)}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[13px] text-ink hover:bg-black/[0.04]"
-                >
-                  <span className="text-faint">
-                    <Icon size={15} />
-                  </span>
-                  {s.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* New tab */}
+      <button
+        onClick={onNewTab}
+        aria-label="New tab"
+        title="New tab"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-black/[0.04] hover:text-ink"
+      >
+        <PlusIcon size={15} />
+      </button>
     </div>
   );
 }

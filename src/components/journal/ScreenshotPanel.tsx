@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { UploadIcon, PlusIcon } from "../icons";
 import { cleanErrorMessage } from "@/lib/errors";
+import ImageLightbox from "../notebook/ImageLightbox";
 
 type Kind = "BEFORE" | "AFTER";
 type Shots = { before: string | null; after: string | null };
@@ -39,6 +40,7 @@ function Slot({
   busy,
   onPick,
   onRemove,
+  onView,
 }: {
   kind: Kind;
   label: string;
@@ -47,6 +49,7 @@ function Slot({
   busy: boolean;
   onPick: (file: File) => void;
   onRemove: () => void;
+  onView: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -67,38 +70,53 @@ function Slot({
         )}
       </div>
 
-      <button
-        data-screenshot-slot
-        onClick={() => inputRef.current?.click()}
-        onPaste={(e) => {
-          const file = Array.from(e.clipboardData.items)
-            .find((it) => it.type.startsWith("image/"))
-            ?.getAsFile();
-          if (file) {
-            e.preventDefault();
-            onPick(file);
-          }
-        }}
-        title="Click to upload, or paste an image (Ctrl/⌘+V)"
-        className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-black/[0.015] transition-colors hover:border-accent/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-      >
-        {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} alt={`${label} screenshot`} className="h-full w-full object-cover" />
-        ) : (
+      {src ? (
+        // Uploaded: click the image to view it full-screen; hover to replace.
+        <div className="group relative aspect-[16/10] overflow-hidden rounded-xl border border-line">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={`${label} screenshot`}
+            onClick={onView}
+            title="Click to view full size"
+            className="h-full w-full cursor-zoom-in object-cover"
+          />
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="absolute bottom-2 right-2 rounded-md bg-[rgba(0,0,0,0.6)] px-2 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            Replace
+          </button>
+          {busy && (
+            <span className="absolute inset-0 grid place-items-center bg-[rgba(0,0,0,0.55)] text-[12px] text-white">
+              Uploading…
+            </span>
+          )}
+        </div>
+      ) : (
+        <button
+          data-screenshot-slot
+          onClick={() => inputRef.current?.click()}
+          onPaste={(e) => {
+            const file = Array.from(e.clipboardData.items)
+              .find((it) => it.type.startsWith("image/"))
+              ?.getAsFile();
+            if (file) {
+              e.preventDefault();
+              onPick(file);
+            }
+          }}
+          title="Click to upload, or paste an image (Ctrl/⌘+V)"
+          className="group relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl border border-dashed border-line bg-black/[0.015] transition-colors hover:border-accent/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+        >
           <span className="flex flex-col items-center gap-1.5 text-faint group-hover:text-accent">
             <PlusIcon size={20} />
             <span className="text-[12px]">
               {busy ? "Uploading…" : "Add or paste screenshot"}
             </span>
           </span>
-        )}
-        {busy && (
-          <span className="absolute inset-0 grid place-items-center bg-surface/70 text-[12px] text-accent">
-            Uploading…
-          </span>
-        )}
-      </button>
+        </button>
+      )}
 
       <input
         ref={inputRef}
@@ -126,6 +144,7 @@ export default function ScreenshotPanel({
 }) {
   const [busy, setBusy] = useState<Kind | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const upload = async (kind: Kind, file: File) => {
     setBusy(kind);
@@ -205,6 +224,7 @@ export default function ScreenshotPanel({
           busy={busy === "BEFORE"}
           onPick={(f) => upload("BEFORE", f)}
           onRemove={() => remove("BEFORE")}
+          onView={() => screenshots.before && setLightbox(screenshots.before)}
         />
         <Slot
           kind="AFTER"
@@ -214,8 +234,13 @@ export default function ScreenshotPanel({
           busy={busy === "AFTER"}
           onPick={(f) => upload("AFTER", f)}
           onRemove={() => remove("AFTER")}
+          onView={() => screenshots.after && setLightbox(screenshots.after)}
         />
       </div>
+
+      {lightbox && (
+        <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />
+      )}
 
       <p className="mt-4 flex items-center gap-1.5 text-[12px] text-faint">
         <UploadIcon size={13} /> Just paste an image (Ctrl/⌘+V) — it fills the
