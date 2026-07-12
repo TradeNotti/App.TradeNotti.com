@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { PinData } from "@/lib/pinboard";
 import PinViewer from "./PinViewer";
 import { ImageIcon, UploadIcon } from "../icons";
+import { useConfirm } from "../ConfirmDialog";
 
 // Downscale + compress an image File to a JPEG data URL.
 async function compress(file: File, max = 1400, quality = 0.82): Promise<string> {
@@ -33,6 +34,7 @@ export default function PinboardView({ initial }: { initial: PinData[] }) {
   const [viewer, setViewer] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const confirm = useConfirm();
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Upload images straight to the board — no details needed (Pinterest-style).
@@ -59,7 +61,7 @@ export default function PinboardView({ initial }: { initial: PinData[] }) {
   };
 
   const deletePin = async (id: string) => {
-    if (!window.confirm("Delete this pin?")) return;
+    if (!(await confirm({ title: "Delete this pin?" }))) return;
     setPins((prev) => prev.filter((p) => p.id !== id));
     setViewer(null);
     await fetch(`/api/pinboard/${id}`, { method: "DELETE" });

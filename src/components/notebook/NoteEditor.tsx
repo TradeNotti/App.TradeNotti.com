@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NoteData, TemplateData } from "@/lib/notebook";
 import BlockEditor, { type BlockEditorHandle } from "../editor/BlockEditor";
+import { useConfirm } from "../ConfirmDialog";
 import {
   ArrowLeftIcon,
   TemplateIcon,
@@ -37,6 +38,7 @@ export default function NoteEditor({
   const [title, setTitle] = useState(note.title ?? "");
   const [status, setStatus] = useState<Status>("idle");
   const [templates, setTemplates] = useState<TemplateData[]>(initialTemplates);
+  const confirm = useConfirm();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const titleRef = useRef(title);
@@ -92,14 +94,20 @@ export default function NoteEditor({
   };
 
   const removeTemplate = async (id: string) => {
-    if (!window.confirm("Delete this template?")) return;
+    if (!(await confirm({ title: "Delete this template?" }))) return;
     await fetch(`/api/notebook/templates/${id}`, { method: "DELETE" });
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
   const deletePage = async () => {
     if (timer.current) clearTimeout(timer.current);
-    if (!window.confirm("Delete this page? This can't be undone.")) return;
+    if (
+      !(await confirm({
+        title: "Delete this page?",
+        message: "This can't be undone.",
+      }))
+    )
+      return;
     await fetch(`/api/notebook/notes/${note.id}`, { method: "DELETE" });
     router.push(`/notebook/${date}`);
   };

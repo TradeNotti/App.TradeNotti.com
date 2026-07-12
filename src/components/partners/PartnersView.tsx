@@ -9,6 +9,7 @@ import type {
 import { formatMoney } from "@/lib/format";
 import Sparkline from "./Sparkline";
 import { EyeIcon, CheckIcon, CloseIcon, PartnersIcon, TrashIcon } from "../icons";
+import { useConfirm } from "../ConfirmDialog";
 
 const PALETTE = [
   "bg-indigo-500",
@@ -56,6 +57,7 @@ export default function PartnersView({
   const [handle, setHandle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const confirm = useConfirm();
 
   const refresh = async () => {
     const res = await fetch("/api/partners", { cache: "no-store" });
@@ -93,7 +95,8 @@ export default function PartnersView({
   };
 
   const remove = async (id: string) => {
-    if (!window.confirm("Remove this partner?")) return;
+    if (!(await confirm({ title: "Remove this partner?", confirmLabel: "Remove" })))
+      return;
     await fetch(`/api/partners/${id}`, { method: "DELETE" });
     await refresh();
   };

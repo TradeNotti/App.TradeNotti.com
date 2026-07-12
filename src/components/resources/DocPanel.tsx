@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { DocData } from "@/lib/resources";
 import BlockEditor, { type BlockEditorHandle } from "../editor/BlockEditor";
 import { UploadIcon, TrashIcon } from "../icons";
+import { useConfirm } from "../ConfirmDialog";
 
 type Status = "idle" | "saving" | "saved";
 
@@ -31,6 +32,7 @@ export default function DocPanel({
 }) {
   const [title, setTitle] = useState(doc.title);
   const [status, setStatus] = useState<Status>("idle");
+  const confirm = useConfirm();
   const titleRef = useRef(title);
   titleRef.current = title;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,7 +81,13 @@ export default function DocPanel({
 
   const remove = async () => {
     if (timer.current) clearTimeout(timer.current);
-    if (!window.confirm("Delete this document? This can't be undone.")) return;
+    if (
+      !(await confirm({
+        title: "Delete this document?",
+        message: "This can't be undone.",
+      }))
+    )
+      return;
     await fetch(`/api/resources/${doc.id}`, { method: "DELETE" });
     onDelete(doc.id);
   };

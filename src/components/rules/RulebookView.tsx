@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { RuleView } from "@/lib/rules";
 import { PlusIcon, TrashIcon } from "../icons";
+import { useConfirm } from "../ConfirmDialog";
 
 export default function RulebookView({
   initialRules,
@@ -13,6 +14,7 @@ export default function RulebookView({
   const [draft, setDraft] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  const confirm = useConfirm();
 
   const addRule = async () => {
     const text = draft.trim();
@@ -30,7 +32,7 @@ export default function RulebookView({
   };
 
   const removeRule = async (id: string) => {
-    if (!window.confirm("Delete this rule?")) return;
+    if (!(await confirm({ title: "Delete this rule?" }))) return;
     setRules((prev) => prev.filter((r) => r.id !== id));
     await fetch(`/api/rules/${id}`, { method: "DELETE" });
   };

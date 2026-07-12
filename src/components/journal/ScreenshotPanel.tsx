@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { UploadIcon, PlusIcon } from "../icons";
 import { cleanErrorMessage } from "@/lib/errors";
 import ImageLightbox from "../notebook/ImageLightbox";
+import { useConfirm } from "../ConfirmDialog";
 
 type Kind = "BEFORE" | "AFTER";
 type Shots = { before: string | null; after: string | null };
@@ -145,6 +146,7 @@ export default function ScreenshotPanel({
   const [busy, setBusy] = useState<Kind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   const upload = async (kind: Kind, file: File) => {
     setBusy(kind);
@@ -198,7 +200,8 @@ export default function ScreenshotPanel({
   }, [screenshots]);
 
   const remove = async (kind: Kind) => {
-    if (!window.confirm("Remove this screenshot?")) return;
+    if (!(await confirm({ title: "Remove this screenshot?", confirmLabel: "Remove" })))
+      return;
     onChange({ ...screenshots, [kind.toLowerCase()]: null });
     await fetch(`/api/trades/${tradeId}/screenshot?kind=${kind}`, {
       method: "DELETE",

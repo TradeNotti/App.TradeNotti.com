@@ -11,6 +11,7 @@ import {
 } from "../icons";
 import BlockEditor, { type BlockEditorHandle } from "../editor/BlockEditor";
 import { cleanErrorMessage } from "@/lib/errors";
+import { useConfirm } from "../ConfirmDialog";
 import type { TemplateData } from "@/lib/notebook";
 
 // Notes are stored as a stringified TipTap doc. Legacy notes are plain text.
@@ -43,6 +44,7 @@ export default function NotesPanel({
   const [error, setError] = useState<string | null>(null);
   const [templates, setTemplates] = useState<TemplateData[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const confirm = useConfirm();
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -166,7 +168,7 @@ export default function NotesPanel({
   };
 
   const removeTemplate = async (id: string) => {
-    if (!window.confirm("Delete this template?")) return;
+    if (!(await confirm({ title: "Delete this template?" }))) return;
     await fetch(`/api/notebook/templates/${id}`, { method: "DELETE" });
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };

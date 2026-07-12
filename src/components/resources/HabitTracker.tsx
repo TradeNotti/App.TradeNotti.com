@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import type { MonthGrid, HabitStat, DayStatus } from "@/lib/habits";
 import { PlusIcon, ChevronIcon, CheckIcon, TrashIcon, CloseIcon } from "../icons";
+import { useConfirm } from "../ConfirmDialog";
 
 const cycleStatus = (s: DayStatus): DayStatus =>
   s === null ? "done" : s === "done" ? "missed" : null;
@@ -47,6 +48,7 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<HabitStat | null>(null);
   const [adding, setAdding] = useState(false);
+  const confirm = useConfirm();
 
   const reload = useCallback(async (year: number, month: number) => {
     const res = await fetch(`/api/habits?year=${year}&month=${month}`, { cache: "no-store" });
@@ -102,7 +104,13 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
   };
 
   const removeHabit = async (id: string) => {
-    if (!window.confirm("Delete this habit and its history?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this habit?",
+        message: "Its full streak history is removed too.",
+      }))
+    )
+      return;
     await fetch(`/api/habits/${id}`, { method: "DELETE" });
     setEditing(null);
     reload(grid.year, grid.month);

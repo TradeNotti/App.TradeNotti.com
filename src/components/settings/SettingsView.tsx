@@ -8,6 +8,7 @@ import ConnectBrokerModal from "./ConnectBrokerModal";
 import { PlusIcon, ChevronIcon, TrashIcon, ImageIcon, LogoutIcon } from "../icons";
 import ClerkSignOutButton from "./ClerkSignOutButton";
 import { cleanErrorMessage } from "@/lib/errors";
+import { useConfirm } from "../ConfirmDialog";
 
 const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -160,12 +161,16 @@ export default function SettingsView({
     });
   };
 
+  const confirm = useConfirm();
+
   const remove = async (a: ManagedAccount) => {
     setMenuOpen(null);
     if (
-      !window.confirm(
-        `Delete "${a.label}"? This permanently removes the account and all its trades.`,
-      )
+      !(await confirm({
+        title: `Delete "${a.label}"?`,
+        message: "This permanently removes the account and all its trades.",
+        confirmLabel: "Delete account",
+      }))
     )
       return;
     setAccounts((prev) => prev.filter((x) => x.id !== a.id));

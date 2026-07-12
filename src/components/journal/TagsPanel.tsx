@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PlusIcon, TrashIcon } from "../icons";
+import { useConfirm } from "../ConfirmDialog";
 
 export default function TagsPanel({
   tradeId,
@@ -15,6 +16,7 @@ export default function TagsPanel({
   const [adding, setAdding] = useState(false);
   const [value, setValue] = useState("");
   const [pool, setPool] = useState<string[]>([]);
+  const confirm = useConfirm();
 
   // The user's reusable tag pool (tags from all their trades).
   useEffect(() => {
@@ -46,9 +48,10 @@ export default function TagsPanel({
   // Delete a tag from the pool entirely (and off this trade if present).
   const deleteFromPool = async (tag: string) => {
     if (
-      !window.confirm(
-        `Delete the tag "${tag}" from your tag list? It will be removed from this trade too.`,
-      )
+      !(await confirm({
+        title: `Delete the tag "${tag}"?`,
+        message: "It's removed from your tag list and from this trade.",
+      }))
     ) {
       return;
     }
