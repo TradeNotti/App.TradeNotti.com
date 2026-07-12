@@ -59,6 +59,7 @@ export default function PinboardView({ initial }: { initial: PinData[] }) {
   };
 
   const deletePin = async (id: string) => {
+    if (!window.confirm("Delete this pin?")) return;
     setPins((prev) => prev.filter((p) => p.id !== id));
     setViewer(null);
     await fetch(`/api/pinboard/${id}`, { method: "DELETE" });

@@ -198,6 +198,7 @@ export default function ScreenshotPanel({
   }, [screenshots]);
 
   const remove = async (kind: Kind) => {
+    if (!window.confirm("Remove this screenshot?")) return;
     onChange({ ...screenshots, [kind.toLowerCase()]: null });
     await fetch(`/api/trades/${tradeId}/screenshot?kind=${kind}`, {
       method: "DELETE",

@@ -102,6 +102,7 @@ export default function HabitTracker({ initial }: { initial: MonthGrid }) {
   };
 
   const removeHabit = async (id: string) => {
+    if (!window.confirm("Delete this habit and its history?")) return;
     await fetch(`/api/habits/${id}`, { method: "DELETE" });
     setEditing(null);
     reload(grid.year, grid.month);

@@ -45,6 +45,13 @@ export default function TagsPanel({
 
   // Delete a tag from the pool entirely (and off this trade if present).
   const deleteFromPool = async (tag: string) => {
+    if (
+      !window.confirm(
+        `Delete the tag "${tag}" from your tag list? It will be removed from this trade too.`,
+      )
+    ) {
+      return;
+    }
     setPool((p) => p.filter((t) => t !== tag));
     if (tags.includes(tag)) save(tags.filter((t) => t !== tag));
     await fetch(`/api/tags?name=${encodeURIComponent(tag)}`, { method: "DELETE" });
@@ -118,13 +125,18 @@ export default function TagsPanel({
                 key={tag}
                 className="inline-flex items-center rounded-md border border-line text-[12.5px] text-ink-soft"
               >
+                {/* preventDefault on mousedown so clicking a pool tag while the
+                    "New tag" input is open doesn't blur-collapse it first (which
+                    shifts the layout and makes the click miss). */}
                 <button
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => addTag(tag)}
                   className="py-1 pl-2.5 pr-1.5 hover:text-accent"
                 >
                   {tag}
                 </button>
                 <button
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => deleteFromPool(tag)}
                   aria-label={`Delete tag ${tag}`}
                   className="py-1 pr-1.5 text-faint hover:text-loss"

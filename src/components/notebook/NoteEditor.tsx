@@ -92,6 +92,7 @@ export default function NoteEditor({
   };
 
   const removeTemplate = async (id: string) => {
+    if (!window.confirm("Delete this template?")) return;
     await fetch(`/api/notebook/templates/${id}`, { method: "DELETE" });
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };

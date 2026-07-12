@@ -8,7 +8,6 @@ import {
   formatPrice,
   formatMoney,
   formatLots,
-  formatPips,
   formatR,
   formatPercent,
 } from "@/lib/format";
@@ -326,10 +325,9 @@ export default function OutcomePanel({
     }
   };
 
-  const slPips =
-    detail.stopLoss != null
-      ? formatPips(detail.entry, detail.stopLoss, detail.symbol)
-      : undefined;
+  // Plain number (no forced decimals / FX padding) for hand-entered fields.
+  const plainNum = (n: number) =>
+    n.toLocaleString("en-US", { maximumFractionDigits: 6 });
 
   const gradeRow = (
     <Row label="Trade grade">
@@ -369,8 +367,7 @@ export default function OutcomePanel({
           <Row label="Stop loss">
             <EditableNum
               value={detail.stopLoss}
-              format={(n) => formatPrice(n)}
-              hint={slPips}
+              format={plainNum}
               onSave={(stopLoss) => patch({ stopLoss })}
             />
           </Row>
@@ -444,15 +441,14 @@ export default function OutcomePanel({
         <Row label="Stop loss">
           <EditableNum
             value={detail.stopLoss}
-            format={(n) => formatPrice(n)}
-            hint={slPips}
+            format={plainNum}
             onSave={(stopLoss) => patch({ stopLoss })}
           />
         </Row>
-        <Row label="Take profit">
+        <Row label="Target RR">
           <EditableNum
             value={detail.takeProfit}
-            format={(n) => formatPrice(n)}
+            format={plainNum}
             onSave={(takeProfit) => patch({ takeProfit })}
           />
         </Row>

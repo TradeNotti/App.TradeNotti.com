@@ -93,6 +93,7 @@ export default function PartnersView({
   };
 
   const remove = async (id: string) => {
+    if (!window.confirm("Remove this partner?")) return;
     await fetch(`/api/partners/${id}`, { method: "DELETE" });
     await refresh();
   };

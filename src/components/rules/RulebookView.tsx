@@ -30,6 +30,7 @@ export default function RulebookView({
   };
 
   const removeRule = async (id: string) => {
+    if (!window.confirm("Delete this rule?")) return;
     setRules((prev) => prev.filter((r) => r.id !== id));
     await fetch(`/api/rules/${id}`, { method: "DELETE" });
   };
