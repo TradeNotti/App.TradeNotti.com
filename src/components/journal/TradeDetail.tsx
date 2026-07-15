@@ -15,7 +15,7 @@ import {
   formatTradeTime,
   formatAbsolute,
 } from "@/lib/format";
-import { GradePill } from "./cells";
+import { DirBadge, GradePill } from "./cells";
 import { ArrowLeftIcon, TrashIcon } from "../icons";
 import { useTabTitle } from "../tabs/TabsProvider";
 import { useConfirm } from "../ConfirmDialog";
@@ -129,19 +129,27 @@ export default function TradeDetail({
             value={detail.symbol}
             onSave={(symbol) => patchTrade({ symbol })}
           />
-          <DirectionToggle
-            value={detail.direction}
-            onChange={(direction) => patchTrade({ direction })}
-          />
+          {/* Direction is editable only on manual/backtest trades; live trades
+              are pulled from the broker and shown as a read-only badge. */}
+          {detail.isBacktest ? (
+            <DirectionToggle
+              value={detail.direction}
+              onChange={(direction) => patchTrade({ direction })}
+            />
+          ) : (
+            <DirBadge direction={detail.direction} size="lg" />
+          )}
           <GradePill grade={detail.grade} />
-          <button
-            onClick={deleteTrade}
-            aria-label="Delete trade"
-            title="Delete trade"
-            className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-faint transition-colors hover:bg-loss-soft hover:text-loss"
-          >
-            <TrashIcon size={16} />
-          </button>
+          {detail.isBacktest && (
+            <button
+              onClick={deleteTrade}
+              aria-label="Delete trade"
+              title="Delete trade"
+              className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg text-faint transition-colors hover:bg-loss-soft hover:text-loss"
+            >
+              <TrashIcon size={16} />
+            </button>
+          )}
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[1fr_340px]">

@@ -84,6 +84,20 @@ function EditableText({
   );
 }
 
+// Read-only value (broker-fed fields). Formats a number or shows a faint dash.
+function ReadOnly({
+  value,
+  format,
+  className,
+}: {
+  value: number | null;
+  format: (n: number) => string;
+  className?: string;
+}) {
+  if (value == null) return <span className="text-faint">—</span>;
+  return <span className={className}>{format(value)}</span>;
+}
+
 function EditableNum({
   value,
   format,
@@ -424,19 +438,13 @@ export default function OutcomePanel({
       </div>
 
       <div className="flex flex-col">
+        {/* Entry, exit, P&L and size come straight from the broker feed — shown,
+            not edited. Stop loss and Target RR stay editable for annotation. */}
         <Row label="Entry price">
-          <EditableNum
-            value={detail.entry}
-            format={(n) => formatPrice(n)}
-            onSave={(entry) => patch({ entry: entry ?? 0 })}
-          />
+          <ReadOnly value={detail.entry} format={(n) => formatPrice(n)} />
         </Row>
         <Row label="Exit price">
-          <EditableNum
-            value={detail.exitPrice}
-            format={(n) => formatPrice(n)}
-            onSave={(exitPrice) => patch({ exitPrice })}
-          />
+          <ReadOnly value={detail.exitPrice} format={(n) => formatPrice(n)} />
         </Row>
         <Row label="Stop loss">
           <EditableNum
@@ -453,18 +461,14 @@ export default function OutcomePanel({
           />
         </Row>
         <Row label="P&amp;L ($)">
-          <EditableNum
+          <ReadOnly
             value={detail.pnl}
             format={(n) => formatMoney(n)}
-            onSave={(pnl) => patch({ pnl })}
+            className={signedClass(detail.pnl)}
           />
         </Row>
         <Row label="Position size">
-          <EditableNum
-            value={detail.volume}
-            format={(n) => formatLots(n)}
-            onSave={(volume) => patch({ volume })}
-          />
+          <ReadOnly value={detail.volume} format={(n) => formatLots(n)} />
         </Row>
         <Row label="ROI">
           <span className={signedClass(detail.roi)}>{formatPercent(detail.roi)}</span>
