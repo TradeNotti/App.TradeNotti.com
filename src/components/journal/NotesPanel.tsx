@@ -126,8 +126,11 @@ export default function NotesPanel({
     setTranscribing(true);
     setError(null);
     try {
+      // Name the upload by its real type (Safari records mp4, Chrome webm) so
+      // the server / OpenAI can decode it.
+      const ext = (blob.type.split("/")[1] || "webm").split(";")[0];
       const form = new FormData();
-      form.append("audio", blob, "note.webm");
+      form.append("audio", blob, `note.${ext}`);
       const res = await fetch("/api/transcribe", { method: "POST", body: form });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Transcription failed");
