@@ -63,7 +63,7 @@ export function resolveTab(pathname: string): { title: string; icon: IconKey } {
   const hasChild = seg.length > 1;
   switch (root) {
     case "today":
-      return { title: "Today", icon: "today" };
+      return { title: "Dashboard", icon: "analytics" };
     case "journal":
       return hasChild
         ? { title: "Trade", icon: "journal" }

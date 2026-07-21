@@ -7,7 +7,6 @@ import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import { useMobileNav } from "./MobileNav";
 import {
-  SunIcon,
   JournalIcon,
   AnalyticsIcon,
   NotebookIcon,
@@ -21,9 +20,8 @@ import {
 } from "./icons";
 
 const NAV = [
-  { href: "/today", label: "Today", Icon: SunIcon },
+  { href: "/today", label: "Dashboard", Icon: AnalyticsIcon },
   { href: "/journal", label: "Journal", Icon: JournalIcon },
-  { href: "/analytics", label: "Analytics", Icon: AnalyticsIcon },
   { href: "/notebook", label: "Notebook", Icon: NotebookIcon },
   { href: "/rules", label: "Rules", Icon: RulesIcon },
   { href: "/partners", label: "Partners", Icon: PartnersIcon },

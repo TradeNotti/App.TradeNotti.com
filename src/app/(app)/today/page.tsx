@@ -3,6 +3,7 @@ import EmptyAccount from "@/components/EmptyAccount";
 import DailyInsightCard from "@/components/today/DailyInsightCard";
 import TodaysTrades from "@/components/today/TodaysTrades";
 import TradingRules from "@/components/today/TradingRules";
+import AnalyticsView from "@/components/analytics/AnalyticsView";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
@@ -12,12 +13,16 @@ import {
 import { getOpenTrades } from "@/lib/trades";
 import { getRulesForAccount } from "@/lib/rules";
 import { getTodayInsight } from "@/lib/ai/daily-insight";
+import { getAnalytics, getCalendar } from "@/lib/analytics";
+import { getPerformance } from "@/lib/resources";
 import { titleCase } from "@/lib/format";
 import TodayHeading from "@/components/today/TodayHeading";
 
 export const dynamic = "force-dynamic";
 
-export default async function TodayPage({
+// The Dashboard is the app home: today's snapshot + the full performance
+// analytics, all on one page.
+export default async function DashboardPage({
   searchParams,
 }: {
   searchParams: Promise<{ account?: string }>;
@@ -35,13 +40,16 @@ export default async function TodayPage({
     return <EmptyAccount />;
   }
 
-  const [trades, rules, insight] = await Promise.all([
-    // Open trades aggregate across the selected accounts; rules + the daily
-    // insight stay scoped to the primary (first selected) account.
-    getOpenTrades(accountIds),
-    getRulesForAccount(account.id),
-    getTodayInsight(account.id),
-  ]);
+  const now = new Date();
+  const [trades, rules, insight, analytics, calendar, performance] =
+    await Promise.all([
+      getOpenTrades(accountIds),
+      getRulesForAccount(account.id),
+      getTodayInsight(account.id),
+      getAnalytics(accountIds, "month"),
+      getCalendar(accountIds, now.getUTCFullYear(), now.getUTCMonth()),
+      getPerformance(accountIds, "monthly"),
+    ]);
 
   const displayName = titleCase(user?.name ?? "trader");
   const initial = (user?.name ?? "T").charAt(0).toUpperCase();
@@ -61,12 +69,19 @@ export default async function TodayPage({
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
           <TodayHeading displayName={displayName} />
 
           <div className="flex flex-col gap-5">
             <DailyInsightCard category={insight.category} text={insight.text} />
             <TodaysTrades initialTrades={trades} accountId={account.id} />
+            <AnalyticsView
+              embedded
+              initial={analytics}
+              initialCalendar={calendar}
+              performance={performance}
+              accountId={accountParam ?? account.id}
+            />
             <TradingRules rules={rules} />
           </div>
         </div>

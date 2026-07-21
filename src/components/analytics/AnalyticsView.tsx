@@ -69,11 +69,14 @@ export default function AnalyticsView({
   initialCalendar,
   performance,
   accountId,
+  embedded = false,
 }: {
   initial: AnalyticsData;
   initialCalendar: CalendarData;
   performance: PerformanceData;
   accountId: string;
+  // When embedded in the Dashboard, drop the page scroll wrapper + big heading.
+  embedded?: boolean;
 }) {
   const [data, setData] = useState<AnalyticsData>(initial);
   const [range, setRange] = useState<Range>(initial.range);
@@ -142,12 +145,18 @@ export default function AnalyticsView({
     range === "month" ? "vs last mo." : range === "week" ? "vs last wk." : "vs prev.";
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className={embedded ? "" : "flex-1 overflow-y-auto"}>
+      <div className={embedded ? "" : "mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8"}>
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="kicker mb-1">Performance · {data.periodLabel}</div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Analytics</h1>
+            <div className="kicker mb-1">
+              {embedded ? "Performance" : `Performance · ${data.periodLabel}`}
+            </div>
+            {embedded ? (
+              <h2 className="text-xl font-bold tracking-tight">Analytics</h2>
+            ) : (
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Analytics</h1>
+            )}
           </div>
           <div className={`flex items-center gap-2 ${loading ? "opacity-60" : ""}`}>
             <div className="inline-flex rounded-lg bg-black/[0.04] p-0.5">
