@@ -1,19 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type {
-  AnalyticsData,
-  CalendarData,
-  DayTrade,
-  Range,
-} from "@/lib/analytics";
-import type { PerformanceData } from "@/lib/resources";
+import type { AnalyticsData, DayTrade, Range } from "@/lib/analytics";
 import { formatMoney, formatR } from "@/lib/format";
 import EquityCurve from "./EquityCurve";
 import WinLossDonut from "./WinLossDonut";
-import PerformanceCalendar from "./PerformanceCalendar";
 import DayTradesModal from "./DayTradesModal";
-import PerformancePanel from "../resources/PerformancePanel";
 import DateRangePicker from "../DateRangePicker";
 import { ArrowRightIcon, CalendarIcon } from "../icons";
 
@@ -66,14 +58,10 @@ const legendDot = (color: string) => (
 
 export default function AnalyticsView({
   initial,
-  initialCalendar,
-  performance,
   accountId,
   embedded = false,
 }: {
   initial: AnalyticsData;
-  initialCalendar: CalendarData;
-  performance: PerformanceData;
   accountId: string;
   // When embedded in the Dashboard, drop the page scroll wrapper + big heading.
   embedded?: boolean;
@@ -341,12 +329,6 @@ export default function AnalyticsView({
             </ul>
           )}
         </section>
-
-        <PerformanceCalendar initial={initialCalendar} accountId={accountId} />
-
-        <div className="mt-5">
-          <PerformancePanel accountId={accountId} initial={performance} />
-        </div>
       </div>
 
       {openSetup && (
