@@ -49,6 +49,18 @@ export default function EquityCurve({ points }: { points: Point[] }) {
   const line = coords.map(([cx, cy], i) => `${i ? "L" : "M"}${cx.toFixed(1)} ${cy.toFixed(1)}`).join(" ");
   const area = `${line} L${W} ${H} L0 ${H} Z`;
   const last = coords[coords.length - 1];
+  const lastColor = eq[eq.length - 1] >= eq[eq.length - 2] ? "rgb(22,163,74)" : "rgb(220,38,38)";
+
+  // Draw the line as per-segment paths so it reads green while equity rises
+  // and red while it falls, rather than one flat stroke color.
+  const segments = coords.slice(1).map(([cx, cy], i) => {
+    const [px, py] = coords[i];
+    const rising = eq[i + 1] >= eq[i];
+    return {
+      d: `M${px.toFixed(1)} ${py.toFixed(1)} L${cx.toFixed(1)} ${cy.toFixed(1)}`,
+      color: rising ? "rgb(22,163,74)" : "rgb(220,38,38)",
+    };
+  });
 
   return (
     <div>
@@ -64,16 +76,19 @@ export default function EquityCurve({ points }: { points: Point[] }) {
           </linearGradient>
         </defs>
         <path d={area} fill="url(#equityFill)" />
-        <path
-          d={line}
-          fill="none"
-          stroke="rgb(23,23,23)"
-          strokeWidth={2}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-        />
-        <circle cx={last[0]} cy={last[1]} r={4} fill="rgb(23,23,23)" vectorEffect="non-scaling-stroke" />
+        {segments.map((s, i) => (
+          <path
+            key={i}
+            d={s.d}
+            fill="none"
+            stroke={s.color}
+            strokeWidth={2}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        <circle cx={last[0]} cy={last[1]} r={4} fill={lastColor} vectorEffect="non-scaling-stroke" />
       </svg>
       <div className="mt-3 flex justify-between text-[11px] text-faint">
         {axisLabels(points).map((l, i) => (

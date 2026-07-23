@@ -1,16 +1,16 @@
 import TopBar from "@/components/TopBar";
 import EmptyAccount from "@/components/EmptyAccount";
 import DailyInsightCard from "@/components/today/DailyInsightCard";
-import TodaysTrades from "@/components/today/TodaysTrades";
 import TradingRules from "@/components/today/TradingRules";
 import AnalyticsView from "@/components/analytics/AnalyticsView";
+import PerformanceCalendar from "@/components/analytics/PerformanceCalendar";
+import PerformancePanel from "@/components/resources/PerformancePanel";
 import {
   getAccountsForCurrentUser,
   getActiveAccount,
   getActiveAccountIds,
   getCurrentUser,
 } from "@/lib/account";
-import { getOpenTrades } from "@/lib/trades";
 import { getRulesForAccount } from "@/lib/rules";
 import { getTodayInsight } from "@/lib/ai/daily-insight";
 import { getAnalytics, getCalendar } from "@/lib/analytics";
@@ -44,9 +44,8 @@ export default async function DashboardPage({
   }
 
   const now = new Date();
-  const [trades, rules, insight, analytics, calendar, performance, extras, partners] =
+  const [rules, insight, analytics, calendar, performance, extras, partners] =
     await Promise.all([
-      getOpenTrades(accountIds),
       getRulesForAccount(account.id),
       getTodayInsight(account.id),
       getAnalytics(accountIds, "month"),
@@ -95,16 +94,15 @@ export default async function DashboardPage({
 
           <div className="flex flex-col gap-5">
             <DailyInsightCard category={insight.category} text={insight.text} />
-            <TodaysTrades initialTrades={trades} accountId={account.id} />
+            <TradingRules rules={rules} />
             <AnalyticsView
               embedded
               initial={analytics}
-              initialCalendar={calendar}
-              performance={performance}
               accountId={accountParam ?? account.id}
             />
             <DashboardExtras extras={extras} leaderboard={leaderboard} />
-            <TradingRules rules={rules} />
+            <PerformanceCalendar initial={calendar} accountId={accountParam ?? account.id} />
+            <PerformancePanel accountId={accountParam ?? account.id} initial={performance} />
           </div>
         </div>
       </div>
