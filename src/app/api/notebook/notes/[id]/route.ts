@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/account";
-import { getNoteById, updateNote, deleteNote } from "@/lib/notebook";
+import { getNoteById, updateNote, deleteNote, isValidDate } from "@/lib/notebook";
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +30,16 @@ export async function PUT(
   const body = (await req.json().catch(() => ({}))) as {
     title?: string;
     content?: unknown;
+    date?: string;
   };
+  if (body.date !== undefined && !isValidDate(body.date)) {
+    return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  }
 
   const note = await updateNote(user.id, id, {
     title: body.title,
     content: body.content as never,
+    date: body.date,
   });
   if (!note) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ note });

@@ -86,11 +86,11 @@ export async function createNote(
   return toNoteData(note);
 }
 
-/** Update an existing page by id. */
+/** Update an existing page by id — title, content, and/or which day it's on. */
 export async function updateNote(
   userId: string,
   id: string,
-  data: { title?: string; content?: Prisma.InputJsonValue | null },
+  data: { title?: string; content?: Prisma.InputJsonValue | null; date?: string },
 ): Promise<NoteData | null> {
   const existing = await prisma.note.findFirst({
     where: { id, userId },
@@ -108,6 +108,7 @@ export async function updateNote(
     data: {
       ...(data.title !== undefined ? { title: data.title } : {}),
       ...(content !== undefined ? { content } : {}),
+      ...(data.date !== undefined ? { date: data.date } : {}),
     },
   });
   return toNoteData(note);
