@@ -1,7 +1,6 @@
 import TopBar from "@/components/TopBar";
 import EmptyAccount from "@/components/EmptyAccount";
 import DailyInsightCard from "@/components/today/DailyInsightCard";
-import TradingRules from "@/components/today/TradingRules";
 import AnalyticsView from "@/components/analytics/AnalyticsView";
 import PerformanceCalendar from "@/components/analytics/PerformanceCalendar";
 import PerformancePanel from "@/components/resources/PerformancePanel";
@@ -11,7 +10,6 @@ import {
   getActiveAccountIds,
   getCurrentUser,
 } from "@/lib/account";
-import { getRulesForAccount } from "@/lib/rules";
 import { getTodayInsight } from "@/lib/ai/daily-insight";
 import { getAnalytics, getCalendar } from "@/lib/analytics";
 import { getPerformance } from "@/lib/resources";
@@ -44,9 +42,8 @@ export default async function DashboardPage({
   }
 
   const now = new Date();
-  const [rules, insight, analytics, calendar, performance, extras, partners] =
+  const [insight, analytics, calendar, performance, extras, partners] =
     await Promise.all([
-      getRulesForAccount(account.id),
       getTodayInsight(account.id),
       getAnalytics(accountIds, "month"),
       getCalendar(accountIds, now.getUTCFullYear(), now.getUTCMonth()),
@@ -94,7 +91,6 @@ export default async function DashboardPage({
 
           <div className="flex flex-col gap-5">
             <DailyInsightCard category={insight.category} text={insight.text} />
-            <TradingRules rules={rules} />
             <AnalyticsView
               embedded
               initial={analytics}
