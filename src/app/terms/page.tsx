@@ -24,13 +24,13 @@ const SECTIONS: Section[] = [
     blocks: [
       { p: "Welcome to TradeNotti." },
       {
-        p: 'These Terms and Conditions ("Terms") govern your access to and use of the TradeNotti website, web application, mobile applications, software, APIs, and related services (collectively, the "Services") provided by OnAmbition ("TradeNotti," "OnAmbition," "we," "our," or "us").',
+        p: 'These Terms and Conditions ("Terms") govern your access to and use of the TradeNotti website, web application, mobile applications, software, APIs, and related services (collectively, the "Services") provided by TradeNotti ("we," "our," or "us").',
       },
       {
         p: "By creating an account, accessing, or using the Services, you acknowledge that you have read, understood, and agree to be bound by these Terms. If you do not agree to these Terms, you must not access or use the Services.",
       },
       {
-        p: "These Terms form a legally binding agreement between you and OnAmbition regarding your use of the Services.",
+        p: "These Terms form a legally binding agreement between you and TradeNotti regarding your use of the Services.",
       },
     ],
   },
@@ -213,7 +213,7 @@ const SECTIONS: Section[] = [
         ],
       },
       {
-        p: "By submitting content to the Services, you grant OnAmbition a worldwide, non-exclusive, royalty-free license to host, store, reproduce, process, transmit, display, and otherwise use such content solely for the purpose of operating, maintaining, securing, improving, and providing the Services.",
+        p: "By submitting content to the Services, you grant TradeNotti a worldwide, non-exclusive, royalty-free license to host, store, reproduce, process, transmit, display, and otherwise use such content solely for the purpose of operating, maintaining, securing, improving, and providing the Services.",
       },
       { p: "You represent and warrant that:" },
       {
@@ -258,13 +258,13 @@ const SECTIONS: Section[] = [
     heading: "Intellectual Property Rights",
     blocks: [
       {
-        p: "The Services, including all software, source code, designs, interfaces, graphics, logos, trademarks, trade names, text, documentation, databases, audiovisual content, features, functionality, and other materials made available through the Services, are owned by or licensed to OnAmbition and are protected by applicable intellectual property laws.",
+        p: "The Services, including all software, source code, designs, interfaces, graphics, logos, trademarks, trade names, text, documentation, databases, audiovisual content, features, functionality, and other materials made available through the Services, are owned by or licensed to TradeNotti and are protected by applicable intellectual property laws.",
       },
       {
         p: "Except as expressly permitted under these Terms, no portion of the Services may be copied, reproduced, modified, distributed, sold, licensed, leased, reverse engineered, decompiled, disassembled, or otherwise exploited without our prior written consent.",
       },
       {
-        p: "TradeNotti and the TradeNotti logo, together with any associated branding, are trademarks or service marks of OnAmbition. Nothing in these Terms grants you any right or license to use our trademarks without our prior written permission.",
+        p: "TradeNotti and the TradeNotti logo, together with any associated branding, are trademarks or service marks of TradeNotti. Nothing in these Terms grants you any right or license to use our trademarks without our prior written permission.",
       },
       {
         p: "Subject to your compliance with these Terms, we grant you a limited, non-exclusive, non-transferable, revocable license to access and use the Services solely for your personal or internal business purposes.",
@@ -414,7 +414,7 @@ const SECTIONS: Section[] = [
       {
         p: "The Services may contain links to or integrations with third-party websites, software, payment processors, brokers, cloud providers, authentication providers, analytics services, communication platforms, or other external services.",
       },
-      { p: "These third-party services are operated independently of OnAmbition." },
+      { p: "These third-party services are operated independently of TradeNotti." },
       {
         p: "We do not control and are not responsible for the content, availability, security, privacy practices, or performance of any third-party service.",
       },
@@ -432,7 +432,7 @@ const SECTIONS: Section[] = [
         p: "If you submit comments, ideas, suggestions, recommendations, feature requests, or other feedback relating to the Services, you agree that such feedback is provided voluntarily.",
       },
       {
-        p: "You grant OnAmbition the unrestricted right to use, modify, reproduce, distribute, and incorporate your feedback into the Services without compensation, acknowledgment, or obligation to you.",
+        p: "You grant TradeNotti the unrestricted right to use, modify, reproduce, distribute, and incorporate your feedback into the Services without compensation, acknowledgment, or obligation to you.",
       },
       { p: "Nothing in these Terms requires us to implement or respond to any feedback submitted." },
     ],
@@ -445,7 +445,7 @@ const SECTIONS: Section[] = [
         p: 'The Services are provided on an "as is" and "as available" basis, without warranties of any kind, whether express, implied, statutory, or otherwise.',
       },
       {
-        p: "To the fullest extent permitted by applicable law, OnAmbition disclaims all warranties, including any implied warranties of merchantability, fitness for a particular purpose, title, non-infringement, accuracy, reliability, availability, and uninterrupted operation.",
+        p: "To the fullest extent permitted by applicable law, TradeNotti disclaims all warranties, including any implied warranties of merchantability, fitness for a particular purpose, title, non-infringement, accuracy, reliability, availability, and uninterrupted operation.",
       },
       { p: "We do not warrant that:" },
       {
@@ -466,7 +466,7 @@ const SECTIONS: Section[] = [
     heading: "Limitation of Liability",
     blocks: [
       {
-        p: "To the fullest extent permitted by applicable law, OnAmbition, its affiliates, directors, officers, employees, contractors, licensors, and service providers shall not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages arising out of or relating to your use of, or inability to use, the Services.",
+        p: "To the fullest extent permitted by applicable law, TradeNotti, its affiliates, directors, officers, employees, contractors, licensors, and service providers shall not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages arising out of or relating to your use of, or inability to use, the Services.",
       },
       { p: "This includes, without limitation, damages for:" },
       {
@@ -482,7 +482,7 @@ const SECTIONS: Section[] = [
         ],
       },
       {
-        p: "Our total aggregate liability arising from or relating to the Services shall not exceed the amount you paid to OnAmbition for the Services during the twelve (12) months preceding the event giving rise to the claim.",
+        p: "Our total aggregate liability arising from or relating to the Services shall not exceed the amount you paid to TradeNotti for the Services during the twelve (12) months preceding the event giving rise to the claim.",
       },
       {
         p: "Some jurisdictions do not allow certain limitations of liability. In such jurisdictions, the foregoing limitations shall apply only to the maximum extent permitted by law.",
@@ -494,7 +494,7 @@ const SECTIONS: Section[] = [
     heading: "Indemnification",
     blocks: [
       {
-        p: "You agree to defend, indemnify, and hold harmless OnAmbition, its affiliates, directors, officers, employees, contractors, licensors, and service providers from and against any claims, liabilities, damages, judgments, losses, costs, and expenses, including reasonable legal fees, arising out of or relating to:",
+        p: "You agree to defend, indemnify, and hold harmless TradeNotti, its affiliates, directors, officers, employees, contractors, licensors, and service providers from and against any claims, liabilities, damages, judgments, losses, costs, and expenses, including reasonable legal fees, arising out of or relating to:",
       },
       {
         ul: [
@@ -567,7 +567,7 @@ const SECTIONS: Section[] = [
     heading: "Governing Law",
     blocks: [
       {
-        p: "These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which OnAmbition is incorporated, without regard to its conflict of law principles.",
+        p: "These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which TradeNotti is incorporated, without regard to its conflict of law principles.",
       },
       {
         p: "You agree that any legal action or proceeding arising out of or relating to these Terms or the Services shall be brought exclusively before the courts having jurisdiction in that jurisdiction, unless applicable law requires otherwise.",
@@ -580,7 +580,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         sub: "Entire Agreement",
-        p: "These Terms, together with our Privacy Policy and any additional policies expressly incorporated by reference, constitute the entire agreement between you and OnAmbition regarding the Services.",
+        p: "These Terms, together with our Privacy Policy and any additional policies expressly incorporated by reference, constitute the entire agreement between you and TradeNotti regarding the Services.",
       },
       {
         sub: "Severability",
@@ -600,7 +600,7 @@ const SECTIONS: Section[] = [
       },
       {
         sub: "No Partnership",
-        p: "Nothing in these Terms creates any partnership, joint venture, agency, employment, or fiduciary relationship between you and OnAmbition.",
+        p: "Nothing in these Terms creates any partnership, joint venture, agency, employment, or fiduciary relationship between you and TradeNotti.",
       },
     ],
   },
