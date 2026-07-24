@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Logo from "@/components/Logo";
 import SignInForm from "@/components/auth/SignInForm";
 
@@ -26,6 +27,12 @@ export default function LoginPage() {
       <div className="relative">
         <SignInForm />
       </div>
+      <Link
+        href="/terms"
+        className="relative text-[12.5px] text-faint hover:text-ink-soft"
+      >
+        Terms and Conditions
+      </Link>
     </div>
   );
 }
