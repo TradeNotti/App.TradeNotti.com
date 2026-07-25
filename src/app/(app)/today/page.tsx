@@ -91,8 +91,8 @@ export default async function DashboardPage({
           <TodayHeading displayName={displayName} />
 
           <div className="flex flex-col gap-5">
-            <MetricsBar analytics={analytics} extras={extras} />
             <DailyInsightCard category={insight.category} text={insight.text} />
+            <MetricsBar analytics={analytics} extras={extras} />
             <AnalyticsView
               embedded
               initial={analytics}

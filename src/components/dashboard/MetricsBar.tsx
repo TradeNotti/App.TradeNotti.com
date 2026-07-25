@@ -89,7 +89,7 @@ export default function MetricsBar({
         : extras.profitFactor.toFixed(2);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <Tile
         label="Account balance"
         value={money(extras.balance)}
@@ -124,11 +124,6 @@ export default function MetricsBar({
         label="Win rate"
         value={analytics.winRate == null ? "—" : `${Math.round(analytics.winRate)}%`}
         sub={`${analytics.wins} of ${analytics.closedCount} closed · avg ${formatR(analytics.avgRR)}`}
-      />
-      <Tile
-        label="Day win %"
-        value={extras.dayWinRate == null ? "—" : `${Math.round(extras.dayWinRate)}%`}
-        sub={`${extras.winDays} of ${extras.tradingDays} trading days`}
       />
     </div>
   );

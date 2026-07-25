@@ -53,20 +53,6 @@ export default function EquityCurve({ points }: { points: Point[] }) {
   const area = `${line} L${W} ${H} L0 ${H} Z`;
   const last = coords[coords.length - 1];
   const lastEquity = eq[eq.length - 1];
-  const rising = lastEquity >= eq[0];
-  const trendVar = rising ? "var(--color-profit)" : "var(--color-loss)";
-  const lastColor = eq[eq.length - 1] >= eq[eq.length - 2] ? "var(--color-profit)" : "var(--color-loss)";
-
-  // Draw the line as per-segment paths so it reads green while equity rises
-  // and red while it falls, rather than one flat stroke color.
-  const segments = coords.slice(1).map(([cx, cy], i) => {
-    const [px, py] = coords[i];
-    const segRising = eq[i + 1] >= eq[i];
-    return {
-      d: `M${px.toFixed(1)} ${py.toFixed(1)} L${cx.toFixed(1)} ${cy.toFixed(1)}`,
-      color: segRising ? "var(--color-profit)" : "var(--color-loss)",
-    };
-  });
 
   return (
     <div>
@@ -78,8 +64,8 @@ export default function EquityCurve({ points }: { points: Point[] }) {
         >
           <defs>
             <linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={trendVar} stopOpacity="0.32" />
-              <stop offset="100%" stopColor={trendVar} stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-profit)" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="var(--color-profit)" stopOpacity="0" />
             </linearGradient>
             <filter id="equityGlow" x="-20%" y="-40%" width="140%" height="180%">
               <feGaussianBlur stdDeviation="4" result="blur" />
@@ -91,26 +77,23 @@ export default function EquityCurve({ points }: { points: Point[] }) {
           </defs>
           <path d={area} fill="url(#equityFill)" />
           <g filter="url(#equityGlow)">
-            {segments.map((s, i) => (
-              <path
-                key={i}
-                d={s.d}
-                fill="none"
-                stroke={s.color}
-                strokeWidth={2.25}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
-              />
-            ))}
+            <path
+              d={line}
+              fill="none"
+              stroke="var(--color-profit)"
+              strokeWidth={2.25}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
           </g>
-          <circle cx={last[0]} cy={last[1]} r={4.5} fill={lastColor} vectorEffect="non-scaling-stroke" />
+          <circle cx={last[0]} cy={last[1]} r={4.5} fill="var(--color-profit)" vectorEffect="non-scaling-stroke" />
           <circle
             cx={last[0]}
             cy={last[1]}
             r={4.5}
             fill="none"
-            stroke={lastColor}
+            stroke="var(--color-profit)"
             strokeOpacity={0.35}
             strokeWidth={5}
             vectorEffect="non-scaling-stroke"
@@ -124,7 +107,7 @@ export default function EquityCurve({ points }: { points: Point[] }) {
             left: `${(last[0] / W) * 100}%`,
             top: `${(last[1] / H) * 100}%`,
             transform: "translate(calc(-100% - 10px), -50%)",
-            backgroundColor: lastColor,
+            backgroundColor: "var(--color-profit)",
             color: "var(--color-canvas)",
           }}
         >

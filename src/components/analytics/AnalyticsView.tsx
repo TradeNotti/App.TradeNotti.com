@@ -129,8 +129,6 @@ export default function AnalyticsView({
   };
 
   const d = data.distribution;
-  const rangeNote =
-    range === "month" ? "vs last mo." : range === "week" ? "vs last wk." : "vs prev.";
 
   return (
     <div className={embedded ? "" : "flex-1 overflow-y-auto"}>
@@ -195,31 +193,7 @@ export default function AnalyticsView({
         </div>
 
         {/* Stat cards */}
-        <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Net P&L"
-            value={compactMoney(data.netPnl)}
-            delta={
-              data.netPnlDeltaPct != null && (
-                <Delta up={data.netPnlDeltaPct >= 0}>
-                  {Math.abs(data.netPnlDeltaPct).toFixed(1)}% {rangeNote}
-                </Delta>
-              )
-            }
-          />
-          <StatCard
-            label="Win rate"
-            value={data.winRate == null ? "—" : `${Math.round(data.winRate)}%`}
-            delta={
-              data.winRatePrev != null &&
-              data.winRate != null && (
-                <Delta up={data.winRate >= data.winRatePrev}>
-                  prev {Math.round(data.winRatePrev)}%
-                </Delta>
-              )
-            }
-            note={`${data.wins} of ${data.closedCount} closed`}
-          />
+        <div className="mb-5 grid gap-4 sm:grid-cols-2">
           <StatCard
             label="Avg RR"
             value={formatR(data.avgRR)}

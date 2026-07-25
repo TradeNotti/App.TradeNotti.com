@@ -75,43 +75,69 @@ function RDistribution({ data }: { data: Extras["rDistribution"] }) {
   );
 }
 
+function dayShort(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 function DailyPnl({ data }: { data: Extras["dailyPnl"] }) {
   const max = Math.max(1, ...data.map((d) => Math.abs(d.pnl)));
+  const total = data.reduce((s, d) => s + d.pnl, 0);
   return (
-    <Card label="Net daily P&L" right={`${data.length} trading days`}>
+    <Card
+      label="Net daily P&L"
+      right={
+        <span className={tone(total)}>
+          {compact(total)} · {data.length} days
+        </span>
+      }
+    >
       {data.length === 0 ? (
         <Empty>No closed trades yet</Empty>
       ) : (
-        <div className="flex h-36 items-center gap-1.5">
-          {data.map((d) => {
-            const h = (Math.abs(d.pnl) / max) * 50; // % of half-height
-            const up = d.pnl >= 0;
-            return (
-              <div
-                key={d.date}
-                title={`${d.date}: ${money(d.pnl)} · ${d.trades} trade${d.trades === 1 ? "" : "s"}`}
-                className="flex h-full flex-1 flex-col justify-center"
-              >
-                <div className="flex h-1/2 items-end">
-                  {up && (
-                    <div
-                      className="w-full rounded-t-sm bg-profit"
-                      style={{ height: `${h * 2}%` }}
-                    />
-                  )}
-                </div>
-                <div className="flex h-1/2 items-start">
-                  {!up && (
-                    <div
-                      className="w-full rounded-b-sm bg-loss"
-                      style={{ height: `${h * 2}%` }}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <>
+          <div className="relative h-40">
+            {/* Zero baseline */}
+            <div className="pointer-events-none absolute inset-x-0 top-1/2 border-t border-line" />
+            <div className="relative flex h-full items-stretch gap-[3px]">
+              {data.map((d) => {
+                const h = (Math.abs(d.pnl) / max) * 48; // % of half-height, leaves headroom
+                const up = d.pnl >= 0;
+                return (
+                  <div
+                    key={d.date}
+                    title={`${dayShort(d.date)}: ${money(d.pnl)} · ${d.trades} trade${d.trades === 1 ? "" : "s"}`}
+                    className="group flex h-full flex-1 flex-col justify-center"
+                  >
+                    <div className="flex h-1/2 items-end">
+                      {up && (
+                        <div
+                          className="w-full rounded-t-[3px] bg-profit transition-opacity group-hover:opacity-80"
+                          style={{ height: `${h * 2}%`, minHeight: 2 }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex h-1/2 items-start">
+                      {!up && (
+                        <div
+                          className="w-full rounded-b-[3px] bg-loss transition-opacity group-hover:opacity-80"
+                          style={{ height: `${h * 2}%`, minHeight: d.pnl < 0 ? 2 : 0 }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="mt-2 flex justify-between text-[10.5px] text-faint">
+            <span>{dayShort(data[0].date)}</span>
+            <span>{dayShort(data[data.length - 1].date)}</span>
+          </div>
+        </>
       )}
     </Card>
   );
