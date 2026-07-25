@@ -40,28 +40,6 @@ function Card({
   );
 }
 
-function Tile({
-  label,
-  value,
-  sub,
-  tone: t,
-}: {
-  label: string;
-  value: string;
-  sub?: React.ReactNode;
-  tone?: string;
-}) {
-  return (
-    <section className="rounded-2xl border border-line bg-surface p-5">
-      <div className="kicker mb-2">{label}</div>
-      <div className={`num text-[26px] font-bold leading-none tracking-tight ${t ?? ""}`}>
-        {value}
-      </div>
-      {sub && <div className="mt-2 text-[12px] text-faint">{sub}</div>}
-    </section>
-  );
-}
-
 // Horizontal win/loss split bar.
 function SplitBar({ wins, total }: { wins: number; total: number }) {
   const pct = total ? (wins / total) * 100 : 0;
@@ -369,41 +347,8 @@ export default function DashboardExtras({
   extras: Extras;
   leaderboard: LeaderRow[];
 }) {
-  const pf =
-    extras.profitFactor == null
-      ? "—"
-      : extras.profitFactor === Infinity
-        ? "∞"
-        : extras.profitFactor.toFixed(2);
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid gap-5 sm:grid-cols-3">
-        <Tile
-          label="Profit factor"
-          value={pf}
-          sub={extras.profitFactor != null && extras.profitFactor >= 2 ? "target ≥ 2.0 ✓" : "target ≥ 2.0"}
-        />
-        <Tile
-          label="Day win %"
-          value={extras.dayWinRate == null ? "—" : `${Math.round(extras.dayWinRate)}%`}
-          sub={`${extras.winDays} of ${extras.tradingDays} days`}
-        />
-        <Tile
-          label="Account balance"
-          value={money(extras.balance)}
-          sub={
-            <>
-              start {money(extras.startBalance)}
-              {extras.growthPct != null && (
-                <span className={`ml-1.5 ${tone(extras.growthPct)}`}>
-                  {extras.growthPct >= 0 ? "▲" : "▼"} {Math.abs(extras.growthPct).toFixed(1)}%
-                </span>
-              )}
-            </>
-          }
-        />
-      </div>
-
       <div className="grid gap-5 lg:grid-cols-2">
         <RDistribution data={extras.rDistribution} />
         <DailyPnl data={extras.dailyPnl} />

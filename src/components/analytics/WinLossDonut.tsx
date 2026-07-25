@@ -16,8 +16,7 @@ export default function WinLossDonut({
           cy="66"
           r={r}
           fill="none"
-          stroke="rgb(0,0,0)"
-          strokeOpacity={0.06}
+          stroke="var(--color-line)"
           strokeWidth={14}
         />
         <circle
@@ -25,7 +24,7 @@ export default function WinLossDonut({
           cy="66"
           r={r}
           fill="none"
-          stroke="rgb(22,163,74)"
+          stroke="var(--color-profit)"
           strokeWidth={14}
           strokeLinecap="round"
           strokeDasharray={`${dash} ${c - dash}`}

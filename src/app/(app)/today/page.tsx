@@ -18,6 +18,7 @@ import { getPartnersData } from "@/lib/partners";
 import { titleCase } from "@/lib/format";
 import TodayHeading from "@/components/today/TodayHeading";
 import DashboardExtras, { type LeaderRow } from "@/components/dashboard/DashboardExtras";
+import MetricsBar from "@/components/dashboard/MetricsBar";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,7 @@ export default async function DashboardPage({
           <TodayHeading displayName={displayName} />
 
           <div className="flex flex-col gap-5">
+            <MetricsBar analytics={analytics} extras={extras} />
             <DailyInsightCard category={insight.category} text={insight.text} />
             <AnalyticsView
               embedded

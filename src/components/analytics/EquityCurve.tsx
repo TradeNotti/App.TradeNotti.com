@@ -7,6 +7,9 @@ const W = 720;
 const H = 240;
 const PAD_Y = 16;
 
+const compactMoney = (n: number) =>
+  `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+
 function axisLabels(points: Point[]): string[] {
   if (points.length < 2) return [];
   const fmt = (iso: string, last: boolean) =>
@@ -49,47 +52,85 @@ export default function EquityCurve({ points }: { points: Point[] }) {
   const line = coords.map(([cx, cy], i) => `${i ? "L" : "M"}${cx.toFixed(1)} ${cy.toFixed(1)}`).join(" ");
   const area = `${line} L${W} ${H} L0 ${H} Z`;
   const last = coords[coords.length - 1];
-  const lastColor = eq[eq.length - 1] >= eq[eq.length - 2] ? "rgb(22,163,74)" : "rgb(220,38,38)";
+  const lastEquity = eq[eq.length - 1];
+  const rising = lastEquity >= eq[0];
+  const trendVar = rising ? "var(--color-profit)" : "var(--color-loss)";
+  const lastColor = eq[eq.length - 1] >= eq[eq.length - 2] ? "var(--color-profit)" : "var(--color-loss)";
 
   // Draw the line as per-segment paths so it reads green while equity rises
   // and red while it falls, rather than one flat stroke color.
   const segments = coords.slice(1).map(([cx, cy], i) => {
     const [px, py] = coords[i];
-    const rising = eq[i + 1] >= eq[i];
+    const segRising = eq[i + 1] >= eq[i];
     return {
       d: `M${px.toFixed(1)} ${py.toFixed(1)} L${cx.toFixed(1)} ${cy.toFixed(1)}`,
-      color: rising ? "rgb(22,163,74)" : "rgb(220,38,38)",
+      color: segRising ? "var(--color-profit)" : "var(--color-loss)",
     };
   });
 
   return (
     <div>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="none"
-        className="h-[240px] w-full"
-      >
-        <defs>
-          <linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgb(99,102,241)" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="rgb(99,102,241)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={area} fill="url(#equityFill)" />
-        {segments.map((s, i) => (
-          <path
-            key={i}
-            d={s.d}
+      <div className="relative">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          className="h-[240px] w-full overflow-visible"
+        >
+          <defs>
+            <linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={trendVar} stopOpacity="0.32" />
+              <stop offset="100%" stopColor={trendVar} stopOpacity="0" />
+            </linearGradient>
+            <filter id="equityGlow" x="-20%" y="-40%" width="140%" height="180%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <path d={area} fill="url(#equityFill)" />
+          <g filter="url(#equityGlow)">
+            {segments.map((s, i) => (
+              <path
+                key={i}
+                d={s.d}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={2.25}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </g>
+          <circle cx={last[0]} cy={last[1]} r={4.5} fill={lastColor} vectorEffect="non-scaling-stroke" />
+          <circle
+            cx={last[0]}
+            cy={last[1]}
+            r={4.5}
             fill="none"
-            stroke={s.color}
-            strokeWidth={2}
-            strokeLinejoin="round"
-            strokeLinecap="round"
+            stroke={lastColor}
+            strokeOpacity={0.35}
+            strokeWidth={5}
             vectorEffect="non-scaling-stroke"
           />
-        ))}
-        <circle cx={last[0]} cy={last[1]} r={4} fill={lastColor} vectorEffect="non-scaling-stroke" />
-      </svg>
+        </svg>
+
+        {/* Callout pill showing the current equity value, pinned to the last point. */}
+        <div
+          className="absolute flex items-center whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-bold shadow-lg"
+          style={{
+            left: `${(last[0] / W) * 100}%`,
+            top: `${(last[1] / H) * 100}%`,
+            transform: "translate(calc(-100% - 10px), -50%)",
+            backgroundColor: lastColor,
+            color: "var(--color-canvas)",
+          }}
+        >
+          {compactMoney(lastEquity)}
+        </div>
+      </div>
       <div className="mt-3 flex justify-between text-[11px] text-faint">
         {axisLabels(points).map((l, i) => (
           <span key={i}>{l}</span>

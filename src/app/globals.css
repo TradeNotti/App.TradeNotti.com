@@ -37,36 +37,38 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Dark ("black") theme — opt-in via data-theme="dark" on <html>. Overriding the
-   semantic tokens re-themes the whole app in one place. Flipping Tailwind's
-   --color-black to a light value turns every subtle bg-black/[..] tint + hover
-   into a light tint, so interactive states stay visible on dark surfaces.
-   Genuine dark backdrops use the .scrim classes below so they stay dark.
+   Dark ("black") theme — the app's default look, applied via data-theme="dark"
+   on <html> (set before first paint in the root layout). A near-black fintech
+   canvas with a punchy neon-green profit color and glowing chart accents.
+   Overriding the semantic tokens re-themes the whole app in one place.
+   Flipping Tailwind's --color-black to a light value turns every subtle
+   bg-black/[..] tint + hover into a light tint, so interactive states stay
+   visible on dark surfaces. Genuine dark backdrops use .scrim below.
    ------------------------------------------------------------------------- */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --color-ink: #eaebf1;
-  --color-ink-soft: #c4c7d2;
-  --color-muted: #949aa7;
-  --color-faint: #6c7280;
-  --color-line: #2a2c35;
-  --color-surface: #17181e;
-  --color-canvas: #0d0e12;
+  --color-ink: #f2f3f7;
+  --color-ink-soft: #c8cad4;
+  --color-muted: #9298a6;
+  --color-faint: #666c7a;
+  --color-line: #23252d;
+  --color-surface: #0e0f13;
+  --color-canvas: #060709;
 
-  --color-profit: #34c98b;
-  --color-profit-soft: #13291f;
-  --color-loss: #f26d6d;
-  --color-loss-soft: #2b1719;
+  --color-profit: #22e08a;
+  --color-profit-soft: #0e2a1e;
+  --color-loss: #ff5c72;
+  --color-loss-soft: #2e1418;
 
-  --color-grade-high: #34c98b;
-  --color-grade-high-bg: #13291f;
-  --color-grade-low: #d6a24e;
+  --color-grade-high: #22e08a;
+  --color-grade-high-bg: #0e2a1e;
+  --color-grade-low: #e0ab4e;
   --color-grade-low-bg: #2b2413;
 
-  --color-accent: #7d6dff;
-  --color-accent-2: #a78bff;
-  --color-accent-bg: #241f45;
+  --color-accent: #8b7dff;
+  --color-accent-2: #b09bff;
+  --color-accent-bg: #201a42;
 
   /* Neutral tint base: flips bg-black/[..] hovers to light on dark surfaces. */
   --color-black: #f1f2f8;
@@ -75,8 +77,8 @@
 :root[data-theme="dark"] body {
   background-color: var(--color-canvas);
   background-image:
-    radial-gradient(52rem 32rem at 12% -6%, rgba(125, 109, 255, 0.1), transparent 60%),
-    radial-gradient(46rem 28rem at 106% 2%, rgba(167, 139, 255, 0.08), transparent 55%);
+    radial-gradient(50rem 30rem at 14% -8%, rgba(34, 224, 138, 0.06), transparent 60%),
+    radial-gradient(46rem 28rem at 104% 4%, rgba(139, 125, 255, 0.08), transparent 55%);
 }
 
 /* Fixed dark backdrops (modal / lightbox scrims) — dark in every theme. */
