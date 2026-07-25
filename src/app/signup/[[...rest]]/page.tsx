@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/nextjs";
+import Link from "next/link";
 import Logo from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,12 @@ export default function SignupPage() {
       <div className="relative">
         <SignUp signInUrl="/login" fallbackRedirectUrl="/today" />
       </div>
+      <Link
+        href="/terms"
+        className="relative text-[12.5px] text-faint hover:text-ink-soft"
+      >
+        Terms and Conditions
+      </Link>
     </div>
   );
 }

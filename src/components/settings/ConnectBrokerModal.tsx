@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { ManagedAccount } from "@/lib/settings";
 import { CloseIcon } from "../icons";
 import { cleanErrorMessage } from "@/lib/errors";
+import PasswordInput from "../PasswordInput";
 
 const input =
   "w-full rounded-lg border border-line px-3 py-2.5 text-[14px] outline-none focus:border-accent/40";
@@ -144,8 +145,7 @@ export default function ConnectBrokerModal({
           </label>
           <label className="block">
             <span className="kicker mb-1 block">Investor (read-only) password</span>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"

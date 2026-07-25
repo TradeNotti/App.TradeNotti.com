@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import PasswordInput from "../PasswordInput";
 
 const inputClass =
   "w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-[14px] text-ink outline-none transition-colors placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-accent/20";
@@ -279,8 +280,7 @@ export default function SignInForm() {
               </button>
             }
           >
-            <input
-              type="password"
+            <PasswordInput
               name="password"
               autoComplete="current-password"
               required
@@ -368,8 +368,7 @@ export default function SignInForm() {
             />
           </Field>
           <Field label="New password">
-            <input
-              type="password"
+            <PasswordInput
               autoComplete="new-password"
               required
               value={newPassword}

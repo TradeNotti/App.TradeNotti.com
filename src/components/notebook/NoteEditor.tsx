@@ -12,9 +12,12 @@ import {
   ChevronIcon,
   TrashIcon,
   PlusIcon,
+  CalendarIcon,
 } from "../icons";
 
 type Status = "idle" | "saving" | "saved";
+
+const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function dayLabel(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -34,12 +37,14 @@ export default function NoteEditor({
   templates: TemplateData[];
 }) {
   const router = useRouter();
-  const date = note.date;
+  const [date, setDate] = useState(note.date);
   const [title, setTitle] = useState(note.title ?? "");
   const [status, setStatus] = useState<Status>("idle");
   const [templates, setTemplates] = useState<TemplateData[]>(initialTemplates);
   const confirm = useConfirm();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [editingDate, setEditingDate] = useState(false);
+  const [movingDate, setMovingDate] = useState(false);
 
   const titleRef = useRef(title);
   titleRef.current = title;
@@ -99,6 +104,26 @@ export default function NoteEditor({
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Move this page to a different day, without losing its title/content.
+  const changeDate = async (nextDate: string) => {
+    setEditingDate(false);
+    if (!VALID_DATE.test(nextDate) || nextDate === date) return;
+    setMovingDate(true);
+    try {
+      const res = await fetch(`/api/notebook/notes/${note.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: nextDate }),
+      });
+      if (res.ok) {
+        setDate(nextDate);
+        router.replace(`/notebook/${nextDate}/${note.id}`);
+      }
+    } finally {
+      setMovingDate(false);
+    }
+  };
+
   const deletePage = async () => {
     if (timer.current) clearTimeout(timer.current);
     if (
@@ -117,12 +142,35 @@ export default function NoteEditor({
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Link
-            href={`/notebook/${date}`}
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink"
-          >
-            <ArrowLeftIcon size={15} /> {dayLabel(date)}
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <Link
+              href={`/notebook/${date}`}
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink"
+            >
+              <ArrowLeftIcon size={15} /> {dayLabel(date)}
+            </Link>
+
+            {editingDate ? (
+              <input
+                type="date"
+                defaultValue={date}
+                autoFocus
+                onChange={(e) => changeDate(e.target.value)}
+                onBlur={() => setEditingDate(false)}
+                className="rounded-md border border-line bg-surface px-1.5 py-0.5 text-[12px] text-ink-soft outline-none focus:border-accent/40"
+              />
+            ) : (
+              <button
+                onClick={() => setEditingDate(true)}
+                title="Move page to a different day"
+                aria-label="Move page to a different day"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-faint hover:bg-black/[0.04] hover:text-ink-soft"
+              >
+                <CalendarIcon size={13} />
+              </button>
+            )}
+            {movingDate && <span className="text-[11px] text-faint">Moving…</span>}
+          </div>
 
           <div className="flex items-center gap-2">
             <span className="text-[12px] text-faint">
