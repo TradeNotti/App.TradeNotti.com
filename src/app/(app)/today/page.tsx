@@ -1,7 +1,6 @@
 import TopBar from "@/components/TopBar";
 import EmptyAccount from "@/components/EmptyAccount";
 import DailyInsightCard from "@/components/today/DailyInsightCard";
-import AnalyticsView from "@/components/analytics/AnalyticsView";
 import PerformanceCalendar from "@/components/analytics/PerformanceCalendar";
 import PerformancePanel from "@/components/resources/PerformancePanel";
 import {
@@ -18,7 +17,7 @@ import { getPartnersData } from "@/lib/partners";
 import { titleCase } from "@/lib/format";
 import TodayHeading from "@/components/today/TodayHeading";
 import DashboardExtras, { type LeaderRow } from "@/components/dashboard/DashboardExtras";
-import MetricsBar from "@/components/dashboard/MetricsBar";
+import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 
 export const dynamic = "force-dynamic";
 
@@ -92,10 +91,9 @@ export default async function DashboardPage({
 
           <div className="flex flex-col gap-5">
             <DailyInsightCard category={insight.category} text={insight.text} />
-            <MetricsBar analytics={analytics} extras={extras} />
-            <AnalyticsView
-              embedded
+            <DashboardAnalytics
               initial={analytics}
+              extras={extras}
               accountId={accountParam ?? account.id}
             />
             <DashboardExtras extras={extras} leaderboard={leaderboard} />

@@ -34,14 +34,18 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Dark is the app's only theme — set server-side so there's no flash and no
-  // client script needed.
   const tree = (
-    <html
-      lang="en"
-      data-theme="dark"
-      className={`${inter.variable} ${bricolage.variable}`}
-    >
+    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
+      <head>
+        {/* Dark is the default theme; a saved "light" preference opts out.
+            Applied before first paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(localStorage.getItem('theme')!=='light')document.documentElement.setAttribute('data-theme','dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

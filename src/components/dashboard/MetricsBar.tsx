@@ -82,11 +82,18 @@ export default function MetricsBar({
   extras: Extras;
 }) {
   const pf =
-    extras.profitFactor == null
+    analytics.profitFactor == null
       ? "—"
-      : extras.profitFactor === Infinity
+      : analytics.profitFactor === Infinity
         ? "∞"
-        : extras.profitFactor.toFixed(2);
+        : analytics.profitFactor.toFixed(2);
+
+  // Per-trade P&L within the selected range, derived from the equity curve
+  // (consecutive deltas) so it stays in sync with the range picker instead
+  // of being locked to "this month" like extras.dailyPnl.
+  const pnlDeltas = analytics.equityCurve
+    .slice(1)
+    .map((p, i) => p.equity - analytics.equityCurve[i].equity);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -103,22 +110,22 @@ export default function MetricsBar({
         sparkValues={analytics.equityCurve.map((p) => p.equity)}
       />
       <Tile
-        label="Net P&L · this month"
+        label="Net P&L"
         value={compact(analytics.netPnl)}
         valueClass={tone(analytics.netPnl)}
         sub={
           analytics.netPnlDeltaPct != null && (
             <span className={tone(analytics.netPnlDeltaPct)}>
-              {analytics.netPnlDeltaPct >= 0 ? "▲" : "▼"} {Math.abs(analytics.netPnlDeltaPct).toFixed(1)}% vs last mo.
+              {analytics.netPnlDeltaPct >= 0 ? "▲" : "▼"} {Math.abs(analytics.netPnlDeltaPct).toFixed(1)}% vs prior period
             </span>
           )
         }
-        sparkValues={extras.dailyPnl.map((d) => d.pnl)}
+        sparkValues={pnlDeltas}
       />
       <Tile
         label="Profit factor"
         value={pf}
-        sub={extras.profitFactor != null && extras.profitFactor >= 2 ? "target ≥ 2.0 ✓" : "target ≥ 2.0"}
+        sub={analytics.profitFactor != null && analytics.profitFactor >= 2 ? "target ≥ 2.0 ✓" : "target ≥ 2.0"}
       />
       <Tile
         label="Win rate"

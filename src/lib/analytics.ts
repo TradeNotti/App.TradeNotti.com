@@ -38,6 +38,7 @@ export interface AnalyticsData {
   avgRRPrev: number | null;
   avgWin: number | null;
   avgLoss: number | null;
+  profitFactor: number | null; // gross profit / gross loss, for the selected range
 
   equityCurve: { t: string; equity: number }[];
   distribution: { wins: number; losses: number; breakeven: number; open: number };
@@ -156,6 +157,7 @@ interface WindowStats {
   avgRR: number | null;
   avgWin: number | null;
   avgLoss: number | null;
+  profitFactor: number | null;
 }
 
 function statsFor(closed: TradeWithTags[], w: Window): WindowStats {
@@ -185,6 +187,7 @@ function statsFor(closed: TradeWithTags[], w: Window): WindowStats {
     }
   }
   const closedCount = inRange.length;
+  const grossLoss = Math.abs(lossSum);
   return {
     netPnl,
     wins,
@@ -195,6 +198,7 @@ function statsFor(closed: TradeWithTags[], w: Window): WindowStats {
     avgRR: rCount ? rSum / rCount : null,
     avgWin: wins ? winSum / wins : null,
     avgLoss: losses ? lossSum / losses : null,
+    profitFactor: grossLoss > 0 ? winSum / grossLoss : winSum > 0 ? Infinity : null,
   };
 }
 
@@ -302,6 +306,7 @@ export async function getAnalytics(
     avgRRPrev: prev?.avgRR ?? null,
     avgWin: cur.avgWin,
     avgLoss: cur.avgLoss,
+    profitFactor: cur.profitFactor,
     equityCurve,
     distribution: {
       wins: cur.wins,

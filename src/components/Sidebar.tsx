@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 import { useMobileNav } from "./MobileNav";
 import {
   JournalIcon,
@@ -228,6 +229,7 @@ export default function Sidebar() {
         </nav>
 
         <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3">
+          <ThemeToggle />
           {FOOTER.map((item) => (
             <NavLink
               key={item.href}
