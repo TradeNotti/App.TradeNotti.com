@@ -75,74 +75,6 @@ function RDistribution({ data }: { data: Extras["rDistribution"] }) {
   );
 }
 
-function dayShort(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function DailyPnl({ data }: { data: Extras["dailyPnl"] }) {
-  const max = Math.max(1, ...data.map((d) => Math.abs(d.pnl)));
-  const total = data.reduce((s, d) => s + d.pnl, 0);
-  return (
-    <Card
-      label="Net daily P&L"
-      right={
-        <span className={tone(total)}>
-          {compact(total)} · {data.length} days
-        </span>
-      }
-    >
-      {data.length === 0 ? (
-        <Empty>No closed trades yet</Empty>
-      ) : (
-        <>
-          <div className="relative h-40">
-            {/* Zero baseline */}
-            <div className="pointer-events-none absolute inset-x-0 top-1/2 border-t border-line" />
-            <div className="relative flex h-full items-stretch gap-[3px]">
-              {data.map((d) => {
-                const h = (Math.abs(d.pnl) / max) * 48; // % of half-height, leaves headroom
-                const up = d.pnl >= 0;
-                return (
-                  <div
-                    key={d.date}
-                    title={`${dayShort(d.date)}: ${money(d.pnl)} · ${d.trades} trade${d.trades === 1 ? "" : "s"}`}
-                    className="group flex h-full flex-1 flex-col justify-center"
-                  >
-                    <div className="flex h-1/2 items-end">
-                      {up && (
-                        <div
-                          className="w-full rounded-t-[3px] bg-profit transition-opacity group-hover:opacity-80"
-                          style={{ height: `${h * 2}%`, minHeight: 2 }}
-                        />
-                      )}
-                    </div>
-                    <div className="flex h-1/2 items-start">
-                      {!up && (
-                        <div
-                          className="w-full rounded-b-[3px] bg-loss transition-opacity group-hover:opacity-80"
-                          style={{ height: `${h * 2}%`, minHeight: d.pnl < 0 ? 2 : 0 }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div className="mt-2 flex justify-between text-[10.5px] text-faint">
-            <span>{dayShort(data[0].date)}</span>
-            <span>{dayShort(data[data.length - 1].date)}</span>
-          </div>
-        </>
-      )}
-    </Card>
-  );
-}
-
 function DirCompare({ ls }: { ls: Extras["longShort"] }) {
   const rows: { label: string; d: Extras["longShort"]["long"] }[] = [
     { label: "Long", d: ls.long },
@@ -373,32 +305,36 @@ function OpenPositions({ extras }: { extras: Extras }) {
 function Leaderboard({ rows }: { rows: LeaderRow[] }) {
   return (
     <Card label="Partners leaderboard" right="win rate">
-      <div className="flex flex-col divide-y divide-line/70">
-        {rows.map((r, i) => (
-          <div
-            key={`${r.name}-${i}`}
-            className={`flex items-center gap-3 py-2.5 ${r.isMe ? "-mx-2 rounded-lg bg-accent-bg/50 px-2" : ""}`}
-          >
-            <span className="num w-5 text-[12px] text-faint">{i + 1}</span>
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-[11px] font-semibold text-accent"
-              aria-hidden
+      {rows.length < 2 ? (
+        <Empty>Add a partner to see how you compare</Empty>
+      ) : (
+        <div className="flex flex-col divide-y divide-line/70">
+          {rows.map((r, i) => (
+            <div
+              key={`${r.name}-${i}`}
+              className={`flex items-center gap-3 py-2.5 ${r.isMe ? "-mx-2 rounded-lg bg-accent-bg/50 px-2" : ""}`}
             >
-              {r.name.slice(0, 2).toUpperCase()}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13.5px] font-medium">
-                {r.name}
-                {r.isMe && <span className="ml-1.5 text-[11px] text-accent">You</span>}
+              <span className="num w-5 text-[12px] text-faint">{i + 1}</span>
+              <span
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-[11px] font-semibold text-accent"
+                aria-hidden
+              >
+                {r.name.slice(0, 2).toUpperCase()}
               </span>
-              {r.note && <span className="block text-[11px] text-faint">{r.note}</span>}
-            </span>
-            <span className="num text-[14px] font-semibold text-profit">
-              {r.winRate == null ? "—" : `${Math.round(r.winRate)}%`}
-            </span>
-          </div>
-        ))}
-      </div>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13.5px] font-medium">
+                  {r.name}
+                  {r.isMe && <span className="ml-1.5 text-[11px] text-accent">You</span>}
+                </span>
+                {r.note && <span className="block text-[11px] text-faint">{r.note}</span>}
+              </span>
+              <span className="num text-[14px] font-semibold text-profit">
+                {r.winRate == null ? "—" : `${Math.round(r.winRate)}%`}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }
@@ -422,7 +358,7 @@ export default function DashboardExtras({
     <div className="flex flex-col gap-5">
       <div className="grid gap-5 lg:grid-cols-2">
         <RDistribution data={extras.rDistribution} />
-        <DailyPnl data={extras.dailyPnl} />
+        <Leaderboard rows={leaderboard} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -436,7 +372,6 @@ export default function DashboardExtras({
       </div>
 
       {extras.openPositions.length > 0 && <OpenPositions extras={extras} />}
-      {leaderboard.length > 1 && <Leaderboard rows={leaderboard} />}
     </div>
   );
 }
