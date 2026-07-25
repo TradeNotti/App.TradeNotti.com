@@ -173,31 +173,76 @@ function DirCompare({ ls }: { ls: Extras["longShort"] }) {
   );
 }
 
-function MostTraded({ data }: { data: Extras["mostTraded"] }) {
-  const max = Math.max(1, ...data.map((s) => Math.abs(s.pnl)));
+// Fixed hue order — a symbol keeps its color slot for as long as it stays
+// in the top 5; never reassigned based on rank alone within a render.
+const CHART_COLORS = [
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-5)",
+];
+
+function MostTradedDonut({ data }: { data: Extras["mostTraded"] }) {
+  const total = data.reduce((s, d) => s + d.count, 0);
+  const r = 52;
+  const c = 2 * Math.PI * r;
+  const gap = total > 1 ? 3 : 0; // thin seam between slices
+  let acc = 0;
+
   return (
     <Card label="Most traded" right="This month">
-      {data.length === 0 ? (
+      {data.length === 0 || total === 0 ? (
         <Empty>No closed trades yet</Empty>
       ) : (
-        <div className="flex flex-col gap-3">
-          {data.map((s) => (
-            <div key={s.symbol}>
-              <div className="mb-1 flex items-baseline justify-between text-[13px]">
-                <span className="font-medium">{s.symbol}</span>
-                <span className="num text-[12.5px]">
+        <div className="flex items-center gap-5">
+          <div className="relative h-[132px] w-[132px] shrink-0">
+            <svg viewBox="0 0 132 132" className="h-full w-full -rotate-90">
+              <circle cx="66" cy="66" r={r} fill="none" stroke="var(--color-line)" strokeWidth={14} />
+              {data.map((s, i) => {
+                const frac = s.count / total;
+                const dash = Math.max(0, frac * c - gap);
+                const offset = -acc;
+                acc += frac * c;
+                return (
+                  <circle
+                    key={s.symbol}
+                    cx="66"
+                    cy="66"
+                    r={r}
+                    fill="none"
+                    stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                    strokeWidth={14}
+                    strokeDasharray={`${dash} ${c - dash}`}
+                    strokeDashoffset={offset}
+                  >
+                    <title>{`${s.symbol}: ${s.count} trade${s.count === 1 ? "" : "s"} (${Math.round(frac * 100)}%) · ${money(s.pnl)}`}</title>
+                  </circle>
+                );
+              })}
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[20px] font-bold leading-none">{data.length}</span>
+              <span className="mt-1 text-[10px] text-faint">pair{data.length === 1 ? "" : "s"}</span>
+            </div>
+          </div>
+          <ul className="flex-1 space-y-2.5 text-[13px]">
+            {data.map((s, i) => (
+              <li key={s.symbol} className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-2 text-ink-soft">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                  />
+                  <span className="truncate font-medium text-ink">{s.symbol}</span>
+                </span>
+                <span className="num shrink-0 text-[12.5px]">
                   <span className={tone(s.pnl)}>{compact(s.pnl)}</span>{" "}
                   <span className="text-faint">· {s.count}</span>
                 </span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-line">
-                <div
-                  className={s.pnl >= 0 ? "h-full bg-accent" : "h-full bg-loss"}
-                  style={{ width: `${(Math.abs(s.pnl) / max) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </Card>
@@ -382,7 +427,7 @@ export default function DashboardExtras({
 
       <div className="grid gap-5 lg:grid-cols-2">
         <DirCompare ls={extras.longShort} />
-        <MostTraded data={extras.mostTraded} />
+        <MostTradedDonut data={extras.mostTraded} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

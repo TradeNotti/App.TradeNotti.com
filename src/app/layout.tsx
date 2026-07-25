@@ -35,7 +35,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const tree = (
-    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${bricolage.variable}`}
+      // data-theme is set by the inline script below (before hydration) from
+      // localStorage, which the server can't see — tell React not to "fix"
+      // the resulting mismatch by stripping the attribute back off.
+      suppressHydrationWarning
+    >
       <head>
         {/* Dark is the default theme; a saved "light" preference opts out.
             Applied before first paint to avoid a flash. */}

@@ -28,6 +28,16 @@
   --color-accent-2: #9d7bff; /* violet — gradient partner */
   --color-accent-bg: #eae7fe; /* selected / active tint */
 
+  /* Categorical chart palette (e.g. per-symbol breakdowns). Fixed hue order,
+     validated for CVD separation + contrast against the surface — see the
+     dataviz skill. Never cycle or reassign per-render; a series keeps its
+     slot. */
+  --color-chart-1: #2a78d6; /* blue */
+  --color-chart-2: #eb6834; /* orange */
+  --color-chart-3: #1baf7a; /* aqua */
+  --color-chart-4: #eda100; /* yellow */
+  --color-chart-5: #e87ba4; /* magenta */
+
   --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace,
     "Menlo", monospace;
 }
@@ -69,6 +79,12 @@
   --color-accent: #8b7dff;
   --color-accent-2: #b09bff;
   --color-accent-bg: #201a42;
+
+  --color-chart-1: #3987e5;
+  --color-chart-2: #d95926;
+  --color-chart-3: #199e70;
+  --color-chart-4: #c98500;
+  --color-chart-5: #d55181;
 
   /* Neutral tint base: flips bg-black/[..] hovers to light on dark surfaces. */
   --color-black: #f1f2f8;
