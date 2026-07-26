@@ -44,12 +44,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Dark is the default theme; a saved "light" preference opts out.
+        {/* Light is the default theme; a saved "dark" preference opts in.
             Applied before first paint to avoid a flash. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{if(localStorage.getItem('theme')!=='light')document.documentElement.setAttribute('data-theme','dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();",
+              "(function(){try{if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();",
           }}
         />
       </head>
