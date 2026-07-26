@@ -122,11 +122,7 @@ export default function MetricsBar({
         }
         sparkValues={pnlDeltas}
       />
-      <Tile
-        label="Profit factor"
-        value={pf}
-        sub={analytics.profitFactor != null && analytics.profitFactor >= 2 ? "target ≥ 2.0 ✓" : "target ≥ 2.0"}
-      />
+      <Tile label="Profit factor" value={pf} />
       <Tile
         label="Win rate"
         value={analytics.winRate == null ? "—" : `${Math.round(analytics.winRate)}%`}
