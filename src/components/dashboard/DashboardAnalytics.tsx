@@ -6,21 +6,27 @@ import type { DashboardExtras as Extras } from "@/lib/dashboard";
 import RangeSwitcher from "./RangeSwitcher";
 import MetricsBar from "./MetricsBar";
 import AnalyticsView from "../analytics/AnalyticsView";
+import DashboardExtrasCards, { type LeaderRow } from "./DashboardExtras";
 
-// Owns the single time-range control shared by the metrics bar and the
-// analytics section below it, so picking Week/Month/YTD/All/Custom updates
-// Net P&L, Profit factor, Win rate, the equity curve, and everything else
-// together instead of each having its own range.
+// Owns the single time-range control shared by the metrics bar, the
+// analytics section, and the extras cards below it, so picking
+// Week/Month/YTD/All/Custom updates Net P&L, Profit factor, Win rate, the
+// equity curve, the R-multiple distribution, long/short split, most-traded
+// pairs, and market-phase breakdown all together instead of the cards
+// staying locked to "this month" while the rest of the range changes.
 export default function DashboardAnalytics({
   initial,
-  extras,
+  extrasInitial,
+  leaderboard,
   accountId,
 }: {
   initial: AnalyticsData;
-  extras: Extras;
+  extrasInitial: Extras;
+  leaderboard: LeaderRow[];
   accountId: string;
 }) {
   const [data, setData] = useState<AnalyticsData>(initial);
+  const [extras, setExtras] = useState<Extras>(extrasInitial);
   const [range, setRange] = useState<Range>(initial.range);
   const [loading, setLoading] = useState(false);
 
@@ -33,10 +39,12 @@ export default function DashboardAnalytics({
         next === "custom" && custom
           ? `range=custom&from=${custom.from}&to=${custom.to}`
           : `range=${next}`;
-      const res = await fetch(`/api/analytics?${qs}&accountId=${accountId}`, {
-        cache: "no-store",
-      });
-      if (res.ok) setData(await res.json());
+      const [analyticsRes, extrasRes] = await Promise.all([
+        fetch(`/api/analytics?${qs}&accountId=${accountId}`, { cache: "no-store" }),
+        fetch(`/api/dashboard/extras?${qs}&accountId=${accountId}`, { cache: "no-store" }),
+      ]);
+      if (analyticsRes.ok) setData(await analyticsRes.json());
+      if (extrasRes.ok) setExtras(await extrasRes.json());
     } finally {
       setLoading(false);
     }
@@ -52,6 +60,12 @@ export default function DashboardAnalytics({
       />
       <MetricsBar analytics={data} extras={extras} />
       <AnalyticsView embedded data={data} range={range} accountId={accountId} />
+      <DashboardExtrasCards
+        extras={extras}
+        leaderboard={leaderboard}
+        range={range}
+        periodLabel={data.periodLabel}
+      />
     </div>
   );
 }

@@ -53,7 +53,7 @@ const num = (v: unknown) => (v == null ? null : Number(v));
 
 // --- time windows (all UTC for determinism) -------------------------------
 
-interface Window {
+export interface Window {
   start: Date | null;
   end: Date;
 }
@@ -83,7 +83,7 @@ function rangeLabel(from: string, to: string): string {
   return `${fmt(from)} – ${fmt(to)}`.toUpperCase();
 }
 
-function resolveWindows(
+export function resolveWindows(
   range: Range,
   now: Date,
   custom?: CustomRange,
@@ -141,7 +141,7 @@ function resolveWindows(
   }
 }
 
-function inWindow(date: Date, w: Window): boolean {
+export function inWindow(date: Date, w: Window): boolean {
   return (w.start === null || date >= w.start) && date <= w.end;
 }
 

@@ -1,8 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Range } from "@/lib/analytics";
 import type { DashboardExtras as Extras } from "@/lib/dashboard";
 import { formatMoney } from "@/lib/format";
+
+// Short label for the currently selected range, used on the cards below —
+// "Custom" ranges fall back to the resolved period label (e.g. "JAN 1 –
+// JAN 31, 2026") since there's no fixed name for an arbitrary date span.
+const RANGE_LABEL: Record<Exclude<Range, "custom">, string> = {
+  week: "This week",
+  month: "This month",
+  ytd: "This year",
+  all: "All time",
+};
+function cardRangeLabel(range: Range, periodLabel: string): string {
+  return range === "custom" ? periodLabel : RANGE_LABEL[range];
+}
 
 export interface LeaderRow {
   name: string;
@@ -50,11 +64,17 @@ function SplitBar({ wins, total }: { wins: number; total: number }) {
   );
 }
 
-function RDistribution({ data }: { data: Extras["rDistribution"] }) {
+function RDistribution({
+  data,
+  rangeLabel,
+}: {
+  data: Extras["rDistribution"];
+  rangeLabel: string;
+}) {
   const max = Math.max(1, ...data.map((b) => b.count));
   const total = data.reduce((s, b) => s + b.count, 0);
   return (
-    <Card label="R-multiple distribution" right="This month">
+    <Card label="R-multiple distribution" right={rangeLabel}>
       {total === 0 ? (
         <Empty>No closed trades yet</Empty>
       ) : (
@@ -75,13 +95,13 @@ function RDistribution({ data }: { data: Extras["rDistribution"] }) {
   );
 }
 
-function DirCompare({ ls }: { ls: Extras["longShort"] }) {
+function DirCompare({ ls, rangeLabel }: { ls: Extras["longShort"]; rangeLabel: string }) {
   const rows: { label: string; d: Extras["longShort"]["long"] }[] = [
     { label: "Long", d: ls.long },
     { label: "Short", d: ls.short },
   ];
   return (
-    <Card label="Long vs short" right="This month">
+    <Card label="Long vs short" right={rangeLabel}>
       <div className="flex flex-col gap-4">
         {rows.map(({ label, d }) => (
           <div key={label}>
@@ -115,7 +135,13 @@ const CHART_COLORS = [
   "var(--color-chart-5)",
 ];
 
-function MostTradedDonut({ data }: { data: Extras["mostTraded"] }) {
+function MostTradedDonut({
+  data,
+  rangeLabel,
+}: {
+  data: Extras["mostTraded"];
+  rangeLabel: string;
+}) {
   const total = data.reduce((s, d) => s + d.count, 0);
   const r = 52;
   const c = 2 * Math.PI * r;
@@ -123,7 +149,7 @@ function MostTradedDonut({ data }: { data: Extras["mostTraded"] }) {
   let acc = 0;
 
   return (
-    <Card label="Most traded" right="This month">
+    <Card label="Most traded" right={rangeLabel}>
       {data.length === 0 || total === 0 ? (
         <Empty>No closed trades yet</Empty>
       ) : (
@@ -181,7 +207,13 @@ function MostTradedDonut({ data }: { data: Extras["mostTraded"] }) {
   );
 }
 
-function PhaseDirection({ phase }: { phase: Extras["phase"] }) {
+function PhaseDirection({
+  phase,
+  rangeLabel,
+}: {
+  phase: Extras["phase"];
+  rangeLabel: string;
+}) {
   const rows = [
     { label: "With trend", d: phase.withTrend },
     { label: "Counter-trend", d: phase.counter },
@@ -209,7 +241,7 @@ function PhaseDirection({ phase }: { phase: Extras["phase"] }) {
             </div>
           ))}
           <p className="text-[11.5px] text-faint">
-            Tagged on {phase.tagged} of {phase.total} trades this month.
+            Tagged on {phase.tagged} of {phase.total} trades ({rangeLabel.toLowerCase()}).
           </p>
         </div>
       )}
@@ -350,24 +382,29 @@ function Empty({ children }: { children: React.ReactNode }) {
 export default function DashboardExtras({
   extras,
   leaderboard,
+  range,
+  periodLabel,
 }: {
   extras: Extras;
   leaderboard: LeaderRow[];
+  range: Range;
+  periodLabel: string;
 }) {
+  const rangeLabel = cardRangeLabel(range, periodLabel);
   return (
     <div className="flex flex-col gap-5">
       <div className="grid gap-5 lg:grid-cols-2">
-        <RDistribution data={extras.rDistribution} />
+        <RDistribution data={extras.rDistribution} rangeLabel={rangeLabel} />
         <Leaderboard rows={leaderboard} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <DirCompare ls={extras.longShort} />
-        <MostTradedDonut data={extras.mostTraded} />
+        <DirCompare ls={extras.longShort} rangeLabel={rangeLabel} />
+        <MostTradedDonut data={extras.mostTraded} rangeLabel={rangeLabel} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <PhaseDirection phase={extras.phase} />
+        <PhaseDirection phase={extras.phase} rangeLabel={rangeLabel} />
         <MarketSessions />
       </div>
 

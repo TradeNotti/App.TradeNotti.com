@@ -16,7 +16,7 @@ import { getDashboardExtras } from "@/lib/dashboard";
 import { getPartnersData } from "@/lib/partners";
 import { titleCase } from "@/lib/format";
 import TodayHeading from "@/components/today/TodayHeading";
-import DashboardExtras, { type LeaderRow } from "@/components/dashboard/DashboardExtras";
+import { type LeaderRow } from "@/components/dashboard/DashboardExtras";
 import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +48,7 @@ export default async function DashboardPage({
       getAnalytics(accountIds, "month"),
       getCalendar(accountIds, now.getUTCFullYear(), now.getUTCMonth()),
       getPerformance(accountIds, "monthly"),
-      getDashboardExtras(accountIds),
+      getDashboardExtras(accountIds, "month"),
       user ? getPartnersData(user.id) : Promise.resolve({ partners: [] as never[] }),
     ]);
 
@@ -93,10 +93,10 @@ export default async function DashboardPage({
             <DailyInsightCard category={insight.category} text={insight.text} />
             <DashboardAnalytics
               initial={analytics}
-              extras={extras}
+              extrasInitial={extras}
+              leaderboard={leaderboard}
               accountId={accountParam ?? account.id}
             />
-            <DashboardExtras extras={extras} leaderboard={leaderboard} />
             <PerformanceCalendar initial={calendar} accountId={accountParam ?? account.id} />
             <PerformancePanel accountId={accountParam ?? account.id} initial={performance} />
           </div>
