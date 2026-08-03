@@ -15,9 +15,10 @@ export interface BrokerCreds {
  */
 export async function connectAccountBroker(
   accountId: string,
+  userId: string,
   creds: BrokerCreds,
 ): Promise<void> {
-  const account = await prisma.account.findUnique({ where: { id: accountId } });
+  const account = await prisma.account.findFirst({ where: { id: accountId, userId } });
   if (!account) throw new Error("Account not found");
 
   let metaApiAccountId: string;
@@ -44,9 +45,9 @@ export async function connectAccountBroker(
   });
 }
 
-export async function disconnectAccountBroker(accountId: string): Promise<void> {
-  await prisma.account.update({
-    where: { id: accountId },
+export async function disconnectAccountBroker(accountId: string, userId: string): Promise<void> {
+  await prisma.account.updateMany({
+    where: { id: accountId, userId },
     data: {
       metaApiAccountId: null,
       brokerLogin: null,

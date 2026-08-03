@@ -19,6 +19,6 @@ export async function POST(req: NextRequest) {
     : null;
   if (!account) return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
-  await disconnectAccountBroker(account.id);
+  await disconnectAccountBroker(account.id, user.id);
   return NextResponse.json({ ok: true });
 }

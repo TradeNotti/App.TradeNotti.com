@@ -5,14 +5,16 @@ import { syncAccountTrades } from "@/lib/broker-sync";
 export const dynamic = "force-dynamic";
 
 // Scheduled broker reconciliation (Vercel Cron hits this with GET).
-// If CRON_SECRET is set, require a matching Bearer token (Vercel sends it).
+// Requires a matching Bearer token (Vercel sends it) — fails closed if
+// CRON_SECRET isn't configured, rather than leaving the endpoint open.
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!secret) {
+    return NextResponse.json({ error: "CRON_SECRET is not configured" }, { status: 500 });
+  }
+  const auth = req.headers.get("authorization");
+  if (auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const accounts = await prisma.account.findMany({ select: { id: true, label: true } });

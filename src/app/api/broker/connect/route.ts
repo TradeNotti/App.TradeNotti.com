@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   if (!account) return NextResponse.json({ error: "Account not found" }, { status: 404 });
 
   try {
-    await connectAccountBroker(account.id, {
+    await connectAccountBroker(account.id, user.id, {
       login: body.login.trim(),
       password: body.password,
       server: body.server.trim(),
