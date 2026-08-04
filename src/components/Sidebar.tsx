@@ -165,12 +165,15 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Desktop left-edge trigger — hover to peek, click to keep it open */}
+      {/* Desktop left-edge trigger — hover to peek in; it hides itself again
+          the moment the pointer leaves (see the peek useEffect above). This
+          is a hover-only affordance — no click handler here, so brushing
+          past the edge never pins the sidebar open. Use the toggle button
+          inside the panel to keep it open deliberately. */}
       {collapsed && (
         <div
           onMouseEnter={showPeek}
-          onClick={() => setCollapsed(false)}
-          className="fixed inset-y-0 left-0 z-30 hidden w-4 cursor-pointer lg:block"
+          className="fixed inset-y-0 left-0 z-30 hidden w-4 lg:block"
           aria-hidden
         />
       )}
