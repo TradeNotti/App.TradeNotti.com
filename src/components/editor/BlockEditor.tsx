@@ -24,6 +24,7 @@ import { TextStyle, Color } from "@tiptap/extension-text-style";
 import Highlight from "@tiptap/extension-highlight";
 import { CharacterCount } from "@tiptap/extensions";
 import ImageLightbox from "../notebook/ImageLightbox";
+import { cleanErrorMessage } from "@/lib/errors";
 import {
   ListBulletIcon,
   ListOrderedIcon,
@@ -33,6 +34,9 @@ import {
   MinusIcon,
   LinkIcon,
   ImageIcon,
+  MicIcon,
+  StopIcon,
+  CloseIcon,
 } from "../icons";
 
 export interface BlockEditorHandle {
@@ -74,6 +78,7 @@ interface SlashItem {
   run?: (e: Editor) => void;
   image?: boolean;
   emoji?: boolean;
+  voice?: boolean;
 }
 
 const HLabel = (n: number) => <span className="text-[13px] font-bold">H{n}</span>;
@@ -90,6 +95,7 @@ const SLASH_ITEMS: SlashItem[] = [
   { title: "Quote", desc: "Capture a quote", keywords: "quote blockquote", icon: <QuoteIcon size={16} />, run: (e) => e.chain().focus().toggleBlockquote().run() },
   { title: "Code block", desc: "Code with syntax", keywords: "code block pre", icon: <CodeBlockIcon size={16} />, run: (e) => e.chain().focus().toggleCodeBlock().run() },
   { title: "Emoji", desc: "Insert an emoji", keywords: "emoji emoticon icon smiley face react sticker", icon: <span className="text-[15px] leading-none">🙂</span>, emoji: true },
+  { title: "Voice note", desc: "Dictate and insert right here", keywords: "voice record mic microphone audio dictate speak transcribe", icon: <MicIcon size={16} />, voice: true },
   { title: "Image", desc: "Upload or paste a picture", keywords: "image picture photo upload", icon: <ImageIcon size={16} />, image: true },
   { title: "Divider", desc: "Horizontal rule", keywords: "divider rule hr line separator", icon: <MinusIcon size={16} />, run: (e) => e.chain().focus().setHorizontalRule().run() },
 ];
@@ -179,6 +185,20 @@ const BlockEditor = forwardRef<
   const [emojiAt, setEmojiAt] = useState<{ top: number; left: number } | null>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
 
+  // In-editor voice note: triggered from the "/" menu, so dictated text lands
+  // exactly where the cursor was — a second way in to voice journaling
+  // alongside whatever global "Record" button the page around this editor
+  // provides (NotesPanel, NoteEditor, …), not a replacement for it.
+  const [voice, setVoice] = useState<{
+    top: number;
+    left: number;
+    pos: number;
+    status: "recording" | "transcribing" | "error";
+    error?: string;
+  } | null>(null);
+  const voiceRecorderRef = useRef<MediaRecorder | null>(null);
+  const voiceDiscardRef = useRef(false);
+
   const editorRef = useRef<Editor | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const onUpdateRef = useRef(onUpdate);
@@ -195,6 +215,68 @@ const BlockEditor = forwardRef<
       editor.chain().focus().setImage({ src }).run();
     }
   }, []);
+
+  const transcribeVoice = useCallback(async (pos: number, blob: Blob) => {
+    try {
+      // Name the upload by its real type (Safari records mp4, Chrome webm) so
+      // the server / OpenAI can decode it.
+      const ext = (blob.type.split("/")[1] || "webm").split(";")[0];
+      const form = new FormData();
+      form.append("audio", blob, `note.${ext}`);
+      const res = await fetch("/api/transcribe", { method: "POST", body: form });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || "Transcription failed");
+      const text = (j.text || "").trim();
+      if (text) {
+        editorRef.current?.chain().focus().insertContentAt(pos, `${text} `).run();
+        onUpdateRef.current?.();
+      }
+      setVoice(null);
+    } catch (e) {
+      setVoice((v) => (v ? { ...v, status: "error", error: cleanErrorMessage(e, "Transcription failed.") } : v));
+    }
+  }, []);
+
+  const startVoiceAt = useCallback(
+    async (pos: number, coords: { top: number; left: number }) => {
+      setVoice({ ...coords, pos, status: "recording" });
+      voiceDiscardRef.current = false;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const rec = new MediaRecorder(stream);
+        const chunks: Blob[] = [];
+        rec.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
+        rec.onstop = async () => {
+          stream.getTracks().forEach((t) => t.stop());
+          if (voiceDiscardRef.current) return;
+          const blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
+          await transcribeVoice(pos, blob);
+        };
+        voiceRecorderRef.current = rec;
+        rec.start();
+      } catch {
+        setVoice((v) => (v ? { ...v, status: "error", error: "Microphone access was denied." } : v));
+      }
+    },
+    [transcribeVoice],
+  );
+
+  const stopVoice = useCallback(() => {
+    setVoice((v) => (v ? { ...v, status: "transcribing" } : v));
+    voiceRecorderRef.current?.stop();
+  }, []);
+
+  const discardVoice = useCallback(() => {
+    voiceDiscardRef.current = true;
+    voiceRecorderRef.current?.stop();
+    setVoice(null);
+    // Closing the popover (cancel, or dismissing an error) should hand
+    // typing focus straight back to the document, not leave it stranded on
+    // a button that just unmounted.
+    editorRef.current?.commands.focus();
+  }, []);
+
+  useEffect(() => () => void discardVoice(), [discardVoice]);
 
   const detectSlash = useCallback((e: Editor) => {
     const { state } = e;
@@ -318,9 +400,10 @@ const BlockEditor = forwardRef<
       setSlash(null);
       if (item.image) imageInputRef.current?.click();
       else if (item.emoji) setEmojiAt(coords);
+      else if (item.voice) startVoiceAt(editor.state.selection.from, coords);
       else item.run?.(editor);
     },
-    [editor, slash],
+    [editor, slash, startVoiceAt],
   );
 
   // Close the emoji picker on outside click or Escape.
@@ -341,6 +424,15 @@ const BlockEditor = forwardRef<
       document.removeEventListener("keydown", onKey);
     };
   }, [emojiAt]);
+
+  // Escape cancels an in-progress voice note (or dismisses an error) without
+  // inserting anything.
+  useEffect(() => {
+    if (!voice) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && discardVoice();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [voice, discardVoice]);
 
   useEffect(() => {
     if (!slash) return;
@@ -585,10 +677,56 @@ const BlockEditor = forwardRef<
 
       <div className="mt-8 border-t border-line pt-3 text-[11.5px] text-faint">
         {words} {words === 1 ? "word" : "words"} · type{" "}
-        <kbd className="rounded border border-line px-1 font-mono">/</kbd> for blocks · paste or
-        drop images · select an image and press{" "}
+        <kbd className="rounded border border-line px-1 font-mono">/</kbd> for blocks (including
+        voice) · paste or drop images · select an image and press{" "}
         <kbd className="rounded border border-line px-1 font-mono">space</kbd> to zoom
       </div>
+
+      {voice && (
+        <div
+          className="fixed z-30 flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 shadow-xl shadow-black/10"
+          style={{ top: voice.top, left: voice.left }}
+        >
+          {voice.status === "recording" && (
+            <>
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-loss opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-loss" />
+              </span>
+              <span className="text-[12.5px] font-medium text-ink-soft">Recording…</span>
+              <button
+                onClick={stopVoice}
+                className="ml-1 flex items-center gap-1 rounded-md bg-loss-soft px-2 py-1 text-[12px] font-medium text-loss hover:bg-loss-soft/70"
+              >
+                <StopIcon size={12} /> Stop
+              </button>
+              <button
+                onClick={discardVoice}
+                aria-label="Cancel voice note"
+                title="Cancel"
+                className="text-faint hover:text-ink-soft"
+              >
+                <CloseIcon size={12} />
+              </button>
+            </>
+          )}
+          {voice.status === "transcribing" && (
+            <span className="text-[12.5px] font-medium text-ink-soft">Transcribing…</span>
+          )}
+          {voice.status === "error" && (
+            <>
+              <span className="max-w-[220px] text-[12.5px] text-loss">{voice.error}</span>
+              <button
+                onClick={discardVoice}
+                aria-label="Dismiss"
+                className="shrink-0 text-faint hover:text-ink-soft"
+              >
+                <CloseIcon size={12} />
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {lightbox && <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />}
     </div>
