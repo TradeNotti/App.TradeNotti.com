@@ -248,8 +248,44 @@ function normalizeSymbol(symbol: string): string {
   return symbol;
 }
 
+// A validation error from MetaApi's account-creation endpoint carries a
+// structured `details` field, not just prose — e.g. E_SRV_NOT_FOUND comes
+// with a list of similarly-named servers for the broker. Surfacing that
+// (instead of just truncated raw response text) is what lets a caller give
+// actually-specific guidance instead of a generic "check your credentials".
+export class MetaApiValidationError extends Error {
+  code?: string;
+  suggestedServers?: string[];
+  constructor(message: string, code?: string, suggestedServers?: string[]) {
+    super(message);
+    this.name = "MetaApiValidationError";
+    this.code = code;
+    this.suggestedServers = suggestedServers;
+  }
+}
+
+interface MetaApiErrorBody {
+  error?: string;
+  message?: string;
+  details?: string | { code?: string; serversByBrokers?: Record<string, string[]> };
+}
+
 async function apiError(res: Response, what: string): Promise<Error> {
   const body = await res.text().catch(() => "");
+  let parsed: MetaApiErrorBody | null = null;
+  try {
+    parsed = JSON.parse(body) as MetaApiErrorBody;
+  } catch {
+    // Not JSON (e.g. an upstream 5xx HTML page) — fall through below.
+  }
+  if (parsed?.message) {
+    const code = typeof parsed.details === "string" ? parsed.details : parsed.details?.code;
+    const suggestedServers =
+      typeof parsed.details === "object"
+        ? Object.values(parsed.details.serversByBrokers ?? {}).flat()
+        : undefined;
+    return new MetaApiValidationError(parsed.message, code, suggestedServers);
+  }
   return new Error(`MetaApi ${what} failed (${res.status}): ${body.slice(0, 200)}`);
 }
 

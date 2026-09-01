@@ -9,6 +9,13 @@ import PasswordInput from "../PasswordInput";
 const input =
   "w-full rounded-lg border border-line px-3 py-2.5 text-[14px] outline-none focus:border-accent/40";
 
+// MT4/5 terminals show the server name as "Server: ICMarkets-Live03" in
+// their account-info dialogs; copy-pasting the whole line is a common,
+// easy-to-miss mistake that makes an otherwise-correct server look invalid.
+function normalizeServer(raw: string): string {
+  return raw.trim().replace(/^server\s*:\s*/i, "");
+}
+
 export default function ConnectBrokerModal({
   mode,
   account,
@@ -66,7 +73,13 @@ export default function ConnectBrokerModal({
       const res = await fetch("/api/broker/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: target.id, login, server, password, platform }),
+        body: JSON.stringify({
+          accountId: target.id,
+          login: login.trim(),
+          server: normalizeServer(server),
+          password,
+          platform,
+        }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || "Could not connect.");
@@ -142,6 +155,10 @@ export default function ConnectBrokerModal({
           <label className="block">
             <span className="kicker mb-1 block">Server</span>
             <input value={server} onChange={(e) => setServer(e.target.value)} placeholder="ICMarkets-Live01" className={input} />
+            <span className="mt-1 block text-[11.5px] text-faint">
+              Copy this exactly from your MT4/5 terminal — if your account was moved to a
+              different numbered server (e.g. Live03 → Live07), use the current one.
+            </span>
           </label>
           <label className="block">
             <span className="kicker mb-1 block">Investor (read-only) password</span>

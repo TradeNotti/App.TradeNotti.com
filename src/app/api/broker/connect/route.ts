@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/account";
 import { connectAccountBroker } from "@/lib/broker-connect";
+import { MetaApiValidationError } from "@/lib/broker/metaapi-provider";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,26 @@ function friendlyConnectError(e: unknown): string {
   if (/METAAPI_TOKEN|not configured/i.test(msg)) {
     return "Broker import isn't set up on the server yet. Please contact support.";
   }
+
+  // MetaApi's own validation error carries a code, and for an unrecognized
+  // server it even suggests real ones — a much more specific answer than
+  // guessing "check your password" for what's actually a server-name typo
+  // or an account that's been moved to a different numbered server.
+  if (e instanceof MetaApiValidationError) {
+    if (e.code === "E_SRV_NOT_FOUND") {
+      const hint = e.suggestedServers?.length
+        ? ` Closest matches for your broker: ${e.suggestedServers.slice(0, 4).join(", ")}.`
+        : "";
+      return `That server name wasn't recognized.${hint} Copy it exactly from your MT4/5 terminal (Help → About, or your broker's account email) — numbered servers (e.g. "Live03") are easy to mistype or confuse with a similar one.`;
+    }
+    if (e.code === "E_AUTH") {
+      return "Your broker rejected the login, password, or server combination together — it can't tell us which one is wrong. If this account was opened a while ago, double-check the server is still current: brokers sometimes move accounts to a different numbered server (e.g. \"Live03\" → \"Live07\") without changing the login or password.";
+    }
+    if (e.code === "E_SERVER_TIMEZONE") {
+      return "Couldn't detect your broker's server settings right now. Please try again in a minute.";
+    }
+  }
+
   if (/auth|password|invalid.*credential|login/i.test(msg)) {
     return "Those login details were rejected. Check your account login, server and investor (read-only) password, then try again.";
   }
