@@ -37,7 +37,7 @@ connections); Prisma migrations use the direct URL.
 | `METAAPI_TOKEN`      | _(live MT5 only)_                                            |
 | `METAAPI_ACCOUNT_ID` | _(live MT5 only)_                                            |
 | `METAAPI_REGION`     | _(live MT5 only)_ e.g. `new-york`                           |
-| `CRON_SECRET`        | random string; protects `/api/cron/sync`                     |
+| `CRON_SECRET`        | random string; protects `/api/seed`                          |
 
 ## 4. First deploy + seed
 
@@ -51,13 +51,12 @@ DATABASE_URL="<neon-pooled>" DIRECT_URL="<neon-direct>" npm run db:seed
 
 Without this the app renders an empty state ("No account found").
 
-## 5. Scheduled broker sync
+## 5. Broker sync
 
-`vercel.json` defines a cron that calls `GET /api/cron/sync` every 2 minutes to
-keep open positions fresh (so live MT5 data updates even when nobody is viewing
-the page). Set `CRON_SECRET` so only Vercel Cron can trigger it. Crons run on
-Vercel's Hobby plan at a reduced frequency — bump the plan or the schedule as
-needed.
+Broker sync is manual only — the user's "Sync now" button hits
+`POST /api/sync`, which deploys the MetaApi terminal, pulls positions/deals,
+then undeploys (cost control). There's no scheduled/background sync; open
+positions only refresh when a user actually clicks it.
 
 ## Going live with MetaTrader 5
 

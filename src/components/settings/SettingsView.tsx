@@ -318,7 +318,7 @@ export default function SettingsView({
                     {a.connected ? (
                       <>
                         <span className="inline-flex items-center gap-1 text-profit">
-                          <span className="h-1.5 w-1.5 rounded-full bg-profit" /> Auto-sync on
+                          <span className="h-1.5 w-1.5 rounded-full bg-profit" /> Connected
                         </span>
                         <span className="text-faint">
                           ·{" "}
