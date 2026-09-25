@@ -209,6 +209,11 @@ model Account {
   brokerServer     String?
   lastSyncedAt     DateTime?
   syncStatus       String    @default("idle") // idle | syncing | error
+  // When the current "syncing" attempt started. Lets a stuck lock — e.g. the
+  // serverless function got killed by its timeout mid-sync and never reset
+  // syncStatus — be detected and cleared instead of blocking every retry
+  // forever with "Sync already in progress."
+  syncStartedAt    DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

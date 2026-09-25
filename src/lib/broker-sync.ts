@@ -41,9 +41,17 @@ export async function syncAccountTrades(accountId: string): Promise<SyncResult> 
     brokerServer: account.brokerServer,
   });
 
+  // Re-entering on top of a lock the caller determined was abandoned (the
+  // previous attempt's function was killed — e.g. a timeout — before it could
+  // reset its own status). The terminal may still be deployed from that
+  // attempt and billing; clean it up before starting a fresh one.
+  if (account.syncStatus === "syncing") {
+    await provider.undeploy();
+  }
+
   await prisma.account.update({
     where: { id: accountId },
-    data: { syncStatus: "syncing" },
+    data: { syncStatus: "syncing", syncStartedAt: new Date() },
   });
 
   let deployed = false;
@@ -136,6 +144,7 @@ export async function syncAccountTrades(accountId: string): Promise<SyncResult> 
       where: { id: accountId },
       data: {
         syncStatus: "idle",
+        syncStartedAt: null,
         lastSyncedAt: new Date(),
         // Store the live balance so per-trade ROI (pnl / balance) can be computed.
         ...(info?.balance != null ? { balance: info.balance } : {}),
@@ -147,7 +156,7 @@ export async function syncAccountTrades(accountId: string): Promise<SyncResult> 
   } catch (err) {
     await prisma.account.update({
       where: { id: accountId },
-      data: { syncStatus: "error" },
+      data: { syncStatus: "error", syncStartedAt: null },
     });
     throw err;
   } finally {
